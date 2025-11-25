@@ -1,0 +1,15 @@
+version: '3.3'
+services:
+    react:
+      image: invoice-portal-react-image
+      container_name: invoice-portal-react-container
+      build:          # let docker know that we build with dockerfile in locally instead of dockerhub
+        context: .   # which is the directory dockerfile will be searched for
+        dockerfile: Dockerfile    # the file name that will be build
+      ports:
+        - "803:3000"
+      volumes:
+        - .:/app
+      stdin_open: true
+      tty: true
+

@@ -1,0 +1,21 @@
+[
+    {
+      "id": 1,
+      "image": "assets/images/event1.png",
+      "eventName": "Sanjeeb Rhythm Odyssey",
+      "artistName": "Sanjeeb",
+      "eventDate": "2024-12-24",
+      "location": "Dhaka",
+      "description": "Event description here"
+    },
+    {
+      "id": 2,
+      "image": "assets/images/event2.png",
+      "eventName": "Musical Fusion Night",
+      "artistName": "Artists A & B",
+      "eventDate": "2024-12-31",
+      "location": "Chittagong",
+      "description": "Event description here"
+    }
+  ]
+  

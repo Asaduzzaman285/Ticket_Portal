@@ -1,0 +1,59 @@
+[
+    {
+      "id": 1,
+      "image": "data:image/image.png",
+      "name": "Alauddin Ali",
+      "bio": "A legendary composer and lyricist.",
+      "additionalImage": "assets/images/signature-style.png",
+      "videoUrl": "https://www.youtube.com/watch?v=_4GCyU-tBvk"
+    },
+    {
+      "id": 2,
+      "image": "assets/images/image.png",
+      "name": "Abdul Jabbar",
+      "bio": "A legendary composer and lyricist.",
+      "additionalImage": "assets/images/signature-style.png",
+      "videoUrl": "https://www.youtube.com/watch?v=_4GCyU-tBvk"
+    },
+    {
+      "id": 3,
+      "image": "assets/images/image.png",
+      "name": "Abdul Ahad",
+      "bio": "A legendary composer and lyricist.",
+      "additionalImage": "assets/images/signature-style.png",
+      "videoUrl": "https://www.youtube.com/watch?v=_4GCyU-tBvk"
+    },
+    {
+      "id": 4,
+      "image": "assets/images/image.png",
+      "name": "Abdul Ahad",
+      "bio": "A legendary composer and lyricist.",
+      "additionalImage": "assets/images/signature-style.png",
+      "videoUrl": "https://www.youtube.com/watch?v=_4GCyU-tBvk"
+    },
+    {
+      "id": 5,
+      "image": "assets/images/image.png",
+      "name": "Abdul Ahad",
+      "bio": "A legendary composer and lyricist.",
+      "additionalImage": "assets/images/signature-style.png",
+      "videoUrl": "https://www.youtube.com/watch?v=_4GCyU-tBvk"
+    },
+    {
+      "id": 6,
+      "image": "assets/images/image.png",
+      "name": "Abdul Ahad",
+      "bio": "A legendary composer and lyricist.",
+      "additionalImage": "assets/images/signature-style.png",
+      "videoUrl": "https://www.youtube.com/watch?v=_4GCyU-tBvk"
+    },
+    {
+      "id": 7,
+      "image": "assets/images/image.png",
+      "name": "Abdul Ahad",
+      "bio": "A legendary composer and lyricist.",
+      "additionalImage": "assets/images/signature-style.png",
+      "videoUrl": "https://www.youtube.com/watch?v=_4GCyU-tBvk"
+    }
+  
+  ]

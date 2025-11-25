@@ -1,0 +1,18 @@
+*{
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+   
+  }
+  body{
+    min-height: 100vh;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .no-border td:first-child {
+    border-left: none !important;
+    border-bottom: none !important;
+    border-top: none !important;
+  }
+  
