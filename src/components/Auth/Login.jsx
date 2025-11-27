@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Swal from 'sweetalert2';
-import Logo from '../../assets/image/INVOICE.png'; // Import the image as a module
+import Logo from '../../assets/image/lotterylogo.png'; // Import the image as a module
 import './Login.css';
 
 const Login = () => {
@@ -74,7 +74,7 @@ const Login = () => {
             axios.defaults.headers.post['Content-Type'] = 'application/json';
 
             const response = await axios.post(
-                import.meta.env.VITE_APP_API_BASE_URL + '/v1/login',
+                import.meta.env.VITE_APP_API_BASE_URL + '/api/v1/login',
                 { email, password }
             );
 

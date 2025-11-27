@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import logo from '../../assets/image/INVOICE.png'; // Adjust the path as necessary
+import logo from '../../assets/image/lotterylogo.png'; // Adjust the path as necessary
 import { LogOut } from 'lucide-react';
 const Navbar = ({ onSidebarToggle }) => {
     const navigate = useNavigate();

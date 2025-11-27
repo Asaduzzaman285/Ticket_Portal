@@ -11,6 +11,8 @@ import InvoiceEditPage from '../components/InvoiceEditpage';
 import RoleListPage from '../components/RoleListPage';
 import CreateRolePage from '../components/CreateRolePage';
 import PaymentAccountPage from '../components/PaymentAccountPage';
+import DetailsReportListPage from '../components/DetailsReportListPage';
+import SalesSummaryReportPage from '../components/SalesSummaryReportPage';
 
 
 const routes = [
@@ -24,7 +26,10 @@ const routes = [
     { path: '/admin/payment-account', exact: true, name: 'PaymentAccountPage', component: (props) => <PaymentAccountPage{...props} /> },
     { path: '/admin/apps', exact: true, name: 'ApplicationPage', component: (props) => <ApplicationPage{...props} /> },
     { path: '/admin/portal-role', exact: true, name: 'PortalRolePage', component: (props) => <PortalRolePage{...props} /> },
-    { path: '/admin/wintext-invoice', exact: true, name: 'InvoiceListPage', component: (props) => <InvoiceListPage{...props} /> },
+    { path: '/admin/detailed-report', exact: true, name: 'DetailsReportListPage', component: (props) => <DetailsReportListPage{...props} /> },
+    { path: '/admin/summary-report', exact: true, name: 'SalesSummaryReportPage', component: (props) => <SalesSummaryReportPage{...props} /> },
+
+
     { path: '/admin/invoices/create', exact: true, name: 'InvoiceCreatePage', component: (props) => <InvoiceCreatePage{...props} /> },
     {
         path: '/admin/invoices/edit/:id',
@@ -32,5 +37,6 @@ const routes = [
         name: 'InvoiceEditPage',
         component: (props) => <InvoiceEditPage {...props} />
     }
+  
 ];
 export default routes;

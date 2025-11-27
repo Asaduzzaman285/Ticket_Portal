@@ -9,7 +9,10 @@ import {
   Eye, 
   Settings, 
   Banknote, 
-  WalletCards 
+  WalletCards ,
+  FileText,
+  BarChart3,  // Add this
+  Store
 } from 'lucide-react';
 
 const Sidebar = () => {
@@ -33,33 +36,47 @@ const Sidebar = () => {
                         <div className="sb-nav-link-icon">
                             <LayoutDashboard size={20} />
                         </div>
-                        Invoice Dashboard
+                        Lottery Dashboard
                     </NavLink>
 
-                    {/* <NavLink className="nav-link" to="/admin/wintext-invoice" activeClassName="active">
-                        <div className="sb-nav-link-icon">
-                            <Receipt size={20} className="text-white" />
-                        </div>
-                        Wintext Invoice
-                    </NavLink> */}
-                    <NavLink className="nav-link" to="/admin/wintext-invoice" activeClassName="active">
+                    {/* <NavLink className="nav-link" to="/admin/detailed-report" activeClassName="active">
                         <div className="sb-nav-link-icon">
                             <i className="fa-solid fa-file-invoice" style={{ fontSize: '20px' }}></i>
                         </div>
-                        Wintext Invoice
-                    </NavLink>
-                    {/* <NavLink className="nav-link" to="/admin/ads" activeClassName="active">
-            <div className="sb-nav-link-icon">
-              <i className="fas fa-tachometer-alt"></i>
-            </div>
-            Winfin Invoice
-          </NavLink> */}
-                    {/* <NavLink className="nav-link" to="/admin/apps" activeClassName="active">
-                        <div className="sb-nav-link-icon">
-                            <AppWindow size={20} className="text-white" />
-                        </div>
-                        Application
+                        Sales Report
                     </NavLink> */}
+   {/* Report Menu */}
+<div
+    className="nav-link d-flex justify-content-between align-items-center"
+    data-bs-toggle="collapse"
+    data-bs-target="#reportMenu"
+    aria-expanded="false"
+    aria-controls="reportMenu"
+    style={{ cursor: 'pointer'}}
+>
+    <div className="d-flex align-items-center">
+        <div className="sb-nav-link-icon">
+            <FileText size={18} />
+        </div>
+        Report
+    </div>
+    <i className="fas fa-chevron-down"></i>
+</div>
+<div className="collapse" id="reportMenu">
+    <NavLink className="nav-link ms-4" to="/admin/detailed-report" style={{ fontSize: '13px' }}>
+        <FileText size={16} className="me-2" />
+        Sales Details Report
+    </NavLink>
+    <NavLink className="nav-link ms-4" to="/admin/summary-report" style={{ fontSize: '13px' }}>
+        <BarChart3 size={16} className="me-2" />
+        Sales Summary Report
+    </NavLink>
+    <NavLink className="nav-link ms-4" to="/admin/merchant-allotment" style={{ fontSize: '13px' }}>
+        <Store size={16} className="me-2" />
+        Merchant Wise Allotment
+    </NavLink>
+</div>
+
              
                     <div
                         className="nav-link d-flex justify-content-between align-items-center"
@@ -120,10 +137,7 @@ const Sidebar = () => {
                             <WalletCards size={16} className="me-2 " />
                             Payment Account
                         </NavLink>
-                        {/* <NavLink className="nav-link ms-4" to="/admin/apps">
-                            <AppWindow size={16} className="me-2" />
-                            Application
-                        </NavLink> */}
+                   
                     </div>
                 </div>
             </div>
