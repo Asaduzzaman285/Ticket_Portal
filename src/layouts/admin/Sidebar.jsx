@@ -112,7 +112,7 @@ const Sidebar = () => {
                     </div>
 
                     {/* Bank Details main menu */}
-                    <div
+                    {/* <div
                         className="nav-link d-flex justify-content-between align-items-center"
                         data-bs-toggle="collapse"
                         data-bs-target="#bankDetailsMenu"
@@ -127,18 +127,15 @@ const Sidebar = () => {
                             Settings
                         </div>
                         <i className="fas fa-chevron-down"></i>
-                    </div>
-                    <div className="collapse" id="bankDetailsMenu">
-                        {/* <NavLink className="nav-link ms-4" to="/admin/bank">
-                            <Banknote size={16} className="me-2" />
-                            Bank
-                        </NavLink> */}
+                    </div> */}
+                    {/* <div className="collapse" id="bankDetailsMenu">
+                    
                         <NavLink className="nav-link ms-4" to="/admin/payment-account">
                             <WalletCards size={16} className="me-2 " />
                             Payment Account
                         </NavLink>
                    
-                    </div>
+                    </div> */}
                 </div>
             </div>
         </nav>
