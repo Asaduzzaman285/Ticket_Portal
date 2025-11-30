@@ -8,8 +8,8 @@ const UserPage = ({ sidebarVisible = false }) => {
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [roles, setRoles] = useState([]);
-  const [applications, setApplications] = useState([]);
-  const [portalRoles, setPortalRoles] = useState([]);
+  // const [applications, setApplications] = useState([]);
+  // const [portalRoles, setPortalRoles] = useState([]);
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -56,8 +56,7 @@ const UserPage = ({ sidebarVisible = false }) => {
   useEffect(() => {
     fetchUsers();
     fetchRoles();
-    fetchApplications();
-    fetchPortalRoles();
+
     
     // close dropdown when clicking outside
     const onDocClick = (e) => {
@@ -92,7 +91,7 @@ const UserPage = ({ sidebarVisible = false }) => {
     }
     try {
       setUsersLoading(true);
-      const res = await fetch(`${import.meta.env.VITE_APP_API_BASE_URL}/index`, {
+      const res = await fetch(`${import.meta.env.VITE_APP_API_BASE_URL}/api/index`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.status === 401) {
@@ -124,7 +123,7 @@ const UserPage = ({ sidebarVisible = false }) => {
     try {
       setRolesLoading(true);
       const token = localStorage.getItem('authToken');
-      const url = `${import.meta.env.VITE_APP_API_BASE_URL}/v1/role/getAllRoles`;
+      const url = `${import.meta.env.VITE_APP_API_BASE_URL}/api/v1/role/getAllRoles`;
       const res = await fetch(url, {
         method: 'POST',
         headers: {
@@ -143,35 +142,35 @@ const UserPage = ({ sidebarVisible = false }) => {
     }
   };
 
-  const fetchApplications = async () => {
-    const token = localStorage.getItem('authToken');
-    try {
-      const response = await fetch(`${import.meta.env.VITE_APP_API_BASE_URL}/applications`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setApplications(data || []);
-      }
-    } catch (err) {
-      console.error('fetchApplications error', err);
-    }
-  };
+  // const fetchApplications = async () => {
+  //   const token = localStorage.getItem('authToken');
+  //   try {
+  //     const response = await fetch(`${import.meta.env.VITE_APP_API_BASE_URL}/applications`, {
+  //       headers: { Authorization: `Bearer ${token}` }
+  //     });
+  //     if (response.ok) {
+  //       const data = await response.json();
+  //       setApplications(data || []);
+  //     }
+  //   } catch (err) {
+  //     console.error('fetchApplications error', err);
+  //   }
+  // };
 
-  const fetchPortalRoles = async () => {
-    const token = localStorage.getItem('authToken');
-    try {
-      const response = await fetch(`${import.meta.env.VITE_APP_API_BASE_URL}/roles`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setPortalRoles(data || []);
-      }
-    } catch (err) {
-      console.error('fetchPortalRoles error', err);
-    }
-  };
+  // const fetchPortalRoles = async () => {
+  //   const token = localStorage.getItem('authToken');
+  //   try {
+  //     const response = await fetch(`${import.meta.env.VITE_APP_API_BASE_URL}/roles`, {
+  //       headers: { Authorization: `Bearer ${token}` }
+  //     });
+  //     if (response.ok) {
+  //       const data = await response.json();
+  //       setPortalRoles(data || []);
+  //     }
+  //   } catch (err) {
+  //     console.error('fetchPortalRoles error', err);
+  //   }
+  // };
 
   // merged permissions for role ids
   const loadPermissionsForRoles = async (roleIds = []) => {
@@ -186,7 +185,7 @@ const UserPage = ({ sidebarVisible = false }) => {
       setModalPermissionsLoading(true);
       const token = localStorage.getItem('authToken');
       const requests = roleIds.map((id) =>
-        fetch(`${import.meta.env.VITE_APP_API_BASE_URL}/v1/role/getRole`, {
+        fetch(`${import.meta.env.VITE_APP_API_BASE_URL}/api/v1/role/getRole`, {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${token}`,
@@ -302,8 +301,8 @@ const UserPage = ({ sidebarVisible = false }) => {
     try {
       const token = localStorage.getItem('authToken');
       const url = isEditing
-        ? `${import.meta.env.VITE_APP_API_BASE_URL}/v1/updateUser`
-        : `${import.meta.env.VITE_APP_API_BASE_URL}/v1/createUser`;
+        ? `${import.meta.env.VITE_APP_API_BASE_URL}/api/v1/updateUser`
+        : `${import.meta.env.VITE_APP_API_BASE_URL}/api/v1/createUser`;
 
       const payload = {
         name,
@@ -355,7 +354,7 @@ const UserPage = ({ sidebarVisible = false }) => {
     try {
       const token = localStorage.getItem("authToken");
       const res = await fetch(
-        `${import.meta.env.VITE_APP_API_BASE_URL}/v1/getUser`,
+        `${import.meta.env.VITE_APP_API_BASE_URL}/api/v1/getUser`,
         {
           method: "POST",
           headers: {

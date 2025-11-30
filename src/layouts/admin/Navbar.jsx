@@ -64,9 +64,9 @@ const Navbar = ({ onSidebarToggle }) => {
                         <i className="fas fa-user text-white fa-fw"></i> {userName}
                     </Link>
                     <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                        <li>
+                        {/* <li>
                             <hr className="dropdown-divider" />
-                        </li>
+                        </li> */}
                         <li>
                             <button onClick={handleLogout} className="dropdown-item">
                                 <LogOut size={16} className="me-2" />

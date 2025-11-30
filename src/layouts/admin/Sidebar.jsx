@@ -95,11 +95,11 @@ const Sidebar = () => {
                         <i className="fas fa-chevron-down"></i>
                     </div>
                     <div className="collapse" id="accessControlMenu">
-                        <NavLink className="nav-link ms-4" to="/admin/user">
+                        <NavLink className="nav-link ms-4" to="/admin/user" style={{ fontSize: '13px' }}>
                             <Users size={16} className="me-2 " />
                             User
                         </NavLink>
-                        <NavLink className="nav-link ms-4" to="/admin/role">
+                        <NavLink className="nav-link ms-4" to="/admin/role" style={{ fontSize: '13px' }}>
                             <Eye size={16} className="me-2 " />
                             Role
                         </NavLink>

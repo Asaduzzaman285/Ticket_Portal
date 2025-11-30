@@ -449,7 +449,7 @@ const DetailsReportListPage = ({ sidebarVisible = false }) => {
         <div style={containerStyle}>
             {/* Header with Breadcrumb */}
             <div className='mt-5' style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '7px' }}>
-                <h1 style={{ margin: 0, fontSize: '20px', fontWeight: '600' }}>Sales Details Repor</h1>
+                <h1 style={{ margin: 0, fontSize: '20px', fontWeight: '600' }}>Sales Details Report</h1>
                 <div style={{ fontSize: '13px', color: '#555', display: 'flex', alignItems: 'center' }}>
                     <span
                         style={{

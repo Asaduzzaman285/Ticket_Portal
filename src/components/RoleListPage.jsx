@@ -4,64 +4,7 @@ import { Edit, Trash2, Plus } from 'lucide-react';
 import Paginate from './Paginate';
 import Swal from 'sweetalert2';
 import SkeletonLoader from './SkeletonLoader';
- // Reusable Skeleton Loading Component
-// const SkeletonLoader = ({ type = 'table', count = 5, columns = 3 }) => {
-//   if (type === 'table') {
-//     return Array.from({ length: count }).map((_, index) => (
-//       <tr key={`skeleton-${index}`} className="align-middle">
-//         {Array.from({ length: columns }).map((_, colIndex) => (
-//           <td key={`skeleton-${index}-${colIndex}`} className="py-1 px-3">
-//             <div 
-//               className="skeleton-item"
-//               style={{ 
-//                 background: '#eee', 
-//                 height: '20px', 
-//                 borderRadius: '4px', 
-//                 animation: 'pulse 1.5s infinite' 
-//               }}
-//             ></div>
-//           </td>
-//         ))}
-//       </tr>
-//     ));
-//   }
 
-//   if (type === 'card') {
-//     return Array.from({ length: count }).map((_, index) => (
-//       <div key={`skeleton-card-${index}`} className="skeleton-card">
-//         <div 
-//           className="skeleton-item"
-//           style={{ 
-//             background: '#eee', 
-//             height: '100px', 
-//             borderRadius: '8px', 
-//             animation: 'pulse 1.5s infinite',
-//             marginBottom: '10px'
-//           }}
-//         ></div>
-//       </div>
-//     ));
-//   }
-
-//   if (type === 'text') {
-//     return Array.from({ length: count }).map((_, index) => (
-//       <div 
-//         key={`skeleton-text-${index}`}
-//         className="skeleton-item"
-//         style={{ 
-//           background: '#eee', 
-//           height: '16px', 
-//           borderRadius: '4px', 
-//           animation: 'pulse 1.5s infinite',
-//           marginBottom: '8px',
-//           width: index % 2 === 0 ? '80%' : '60%'
-//         }}
-//       ></div>
-//     ));
-//   }
-
-//   return null;
-// };
 
 const RoleListPage = ({ sidebarVisible = false }) => {
   const [allRoles, setAllRoles] = useState([]);
@@ -178,7 +121,7 @@ const RoleListPage = ({ sidebarVisible = false }) => {
       setError(null);
 
       const token = localStorage.getItem('authToken');
-      const url = `${import.meta.env.VITE_APP_API_BASE_URL}/v1/role/getAllRoles`;
+      const url = `${import.meta.env.VITE_APP_API_BASE_URL}/api/v1/role/getAllRoles`;
       const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -218,7 +161,7 @@ const RoleListPage = ({ sidebarVisible = false }) => {
     try {
       setPermissionsLoading(true);
       const token = localStorage.getItem('authToken');
-      const url = `${import.meta.env.VITE_APP_API_BASE_URL}/v1/permission/getAllpermissions`;
+      const url = `${import.meta.env.VITE_APP_API_BASE_URL}/api/v1/permission/getAllpermissions`;
       
       console.log('🔍 Fetching permissions from:', url);
       
@@ -266,7 +209,7 @@ const RoleListPage = ({ sidebarVisible = false }) => {
   const fetchRolePermissions = async (roleId) => {
     try {
       const token = localStorage.getItem('authToken');
-      const url = `${import.meta.env.VITE_APP_API_BASE_URL}/v1/role/getRole`;
+      const url = `${import.meta.env.VITE_APP_API_BASE_URL}/api/v1/role/getRole`;
       
       console.log('Fetching role with permissions for role ID:', roleId);
       
@@ -416,7 +359,7 @@ const RoleListPage = ({ sidebarVisible = false }) => {
       }).filter(Boolean);
       
       if (isEditing) {
-        url = `${import.meta.env.VITE_APP_API_BASE_URL}/v1/role/updateRole`;
+        url = `${import.meta.env.VITE_APP_API_BASE_URL}/api/v1/role/updateRole`;
         body = { 
           id: selectedRoleId, 
           name: name.trim(),
@@ -424,7 +367,7 @@ const RoleListPage = ({ sidebarVisible = false }) => {
           permissions: permissionNames
         };
       } else {
-        url = `${import.meta.env.VITE_APP_API_BASE_URL}/v1/role/createRole`;
+        url = `${import.meta.env.VITE_APP_API_BASE_URL}/api/v1/role/createRole`;
         body = { 
           name: name.trim(),
           guard_name: 'web', 

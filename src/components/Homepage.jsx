@@ -13,7 +13,7 @@ import {
 } from 'recharts';
 
 const Homepage = ({ sidebarVisible = false }) => {
-  const [summaryData, setSummaryData] = useState([]);
+  const [merchantSalesData, setMerchantSalesData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [stats, setStats] = useState({
@@ -21,26 +21,34 @@ const Homepage = ({ sidebarVisible = false }) => {
     totalRevenue: 0,
     totalMerchants: 0,
     averageTicketValue: 0,
+    totalAllotment: 0,
+    totalAvailable: 0
   });
 
-  const [monthlyData, setMonthlyData] = useState([]);
-  const [chartView, setChartView] = useState('monthly'); // 'monthly', 'weekly', 'yearly'
-  const [filterOptions, setFilterOptions] = useState({
-    merchant_list: []
-  });
+  const [chartView, setChartView] = useState('weekly');
+  const [weeklyChartData, setWeeklyChartData] = useState([]);
+  const [monthlyChartData, setMonthlyChartData] = useState([]);
+  const [yearlyChartData, setYearlyChartData] = useState([]);
+  const [selectedMerchant, setSelectedMerchant] = useState('all');
+  const [allTransactions, setAllTransactions] = useState([]);
   
-  const BASE_URL = `${import.meta.env.VITE_APP_API_BASE_URL}/api/v1/summary-report`;
-  const AUTH_TOKEN = localStorage.getItem('authToken');
+  const DASHBOARD_BASE_URL = `${import.meta.env.VITE_APP_API_BASE_URL}/api/v1/dashboard`;
+  const DETAILS_BASE_URL = `${import.meta.env.VITE_APP_API_BASE_URL}/api/v1/details-report`;
 
   // Get auth headers
   const getAuthHeaders = () => {
+    let token = localStorage.getItem('authToken')
+                 || localStorage.getItem('access_token')
+                 || localStorage.getItem('token')
+                 || localStorage.getItem('auth_token');
+    
     const headers = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
     };
     
-    if (AUTH_TOKEN) {
-      headers['Authorization'] = `Bearer ${AUTH_TOKEN}`;
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
     }
     
     return headers;
@@ -58,75 +66,61 @@ const Homepage = ({ sidebarVisible = false }) => {
     return false;
   };
 
-  // Fetch filter options
-  const fetchFilterOptions = async () => {
-    try {
-      const response = await fetch(`${BASE_URL}/filter-data`, {
-        method: 'GET',
-        headers: getAuthHeaders(),
-        credentials: 'include',
-      });
-
-      if (handleUnauthorized(response)) return;
-
-      if (!response.ok) {
-        throw new Error(`${response.status} ${response.statusText}`);
-      }
-
-      const result = await response.json();
-
-      if (result.status === 'success') {
-        const data = result?.data ?? {};
-        const merchantList = data.merchant_list?.map((m) => ({
-          value: m.value,
-          label: m.label
-        })) ?? [];
-
-        setFilterOptions({
-          merchant_list: merchantList
-        });
-      }
-    } catch (error) {
-      console.error('Error fetching filter options:', error);
-    }
-  };
-
-  // Fetch summary data
-  const fetchSummaryData = async () => {
+  // Fetch dashboard data (merchant wise sales)
+  const fetchDashboardData = async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${BASE_URL}/list-paginate`, {
+      // Fetch merchant sales summary
+      const dashboardResponse = await fetch(`${DASHBOARD_BASE_URL}/dashboard-data`, {
         method: 'GET',
         headers: getAuthHeaders(),
         credentials: 'include',
       });
 
-      if (handleUnauthorized(response)) return;
+      if (handleUnauthorized(dashboardResponse)) return;
 
-      const result = await response.json();
+      const dashboardResult = await dashboardResponse.json();
 
-      if (result.status === 'success' && result.data) {
-        const summaryData = result.data.data || [];
-        setSummaryData(summaryData);
-        calculateStats(summaryData);
-        calculateMonthlyData(summaryData);
+      if (dashboardResult.status === 'success' && dashboardResult.data) {
+        const merchantData = dashboardResult.data.merchant_wise_sale || [];
+        setMerchantSalesData(merchantData);
+        calculateStats(merchantData);
+      }
+
+      // Fetch detailed transaction data for charts
+      const detailsResponse = await fetch(`${DETAILS_BASE_URL}/list-paginate`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+        credentials: 'include',
+      });
+
+      if (handleUnauthorized(detailsResponse)) return;
+
+      const detailsResult = await detailsResponse.json();
+
+      if (detailsResult.status === 'success' && detailsResult.data) {
+        const transactionData = detailsResult.data.data || [];
+        setAllTransactions(transactionData);
+        generateChartDataFromTransactions(transactionData, 'all');
       } else {
-        setError('Failed to fetch summary data');
+        setError('Failed to fetch transaction details');
       }
     } catch (err) {
       setError('Error connecting to server');
-      console.error('Fetch summary data error:', err);
+      console.error('Fetch dashboard data error:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  // Calculate statistics
-  const calculateStats = (summaryData) => {
-    const totalTickets = summaryData.reduce((sum, item) => sum + (item.ticket_qty || 0), 0);
-    const totalRevenue = summaryData.reduce((sum, item) => sum + (item.total_amount || 0), 0);
-    const totalMerchants = summaryData.length;
+  // Calculate statistics from merchant data
+  const calculateStats = (merchantData) => {
+    const totalTickets = merchantData.reduce((sum, item) => sum + (item.total_sales || 0), 0);
+    const totalRevenue = merchantData.reduce((sum, item) => sum + (item.total_sales_amount || 0), 0);
+    const totalAllotment = merchantData.reduce((sum, item) => sum + (item.ticket_allotment || 0), 0);
+    const totalAvailable = merchantData.reduce((sum, item) => sum + (item.ticket_available || 0), 0);
+    const totalMerchants = merchantData.length;
     const averageTicketValue = totalTickets > 0 ? totalRevenue / totalTickets : 0;
 
     setStats({
@@ -134,110 +128,184 @@ const Homepage = ({ sidebarVisible = false }) => {
       totalRevenue: totalRevenue.toFixed(2),
       totalMerchants,
       averageTicketValue: averageTicketValue.toFixed(2),
+      totalAllotment,
+      totalAvailable
     });
   };
 
-  // Monthly aggregation (mock data for chart - you can replace with actual time-based data)
-  const calculateMonthlyData = (summaryData) => {
-    const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  // Generate chart data from actual transactions
+  const generateChartDataFromTransactions = (transactions, merchantFilter = 'all') => {
+    if (!transactions || transactions.length === 0) {
+      setWeeklyChartData([]);
+      setMonthlyChartData([]);
+      setYearlyChartData([]);
+      return;
+    }
+
+    // Filter transactions by merchant if not "all"
+    let filteredTransactions = transactions;
+    if (merchantFilter !== 'all') {
+      filteredTransactions = transactions.filter(t => t.merchant_id === parseInt(merchantFilter));
+    }
+
+    // WEEKLY: Group by last 7 days
+    const weeklyMap = {};
+    const today = new Date();
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     
-    // Create mock monthly data based on total revenue distribution
-    const monthlyRevenue = monthNames.map((month, index) => {
-      // Distribute revenue across months (you can replace this with actual time-based data from your API)
-      const baseRevenue = stats.totalRevenue / 12;
-      const variation = (Math.random() - 0.5) * baseRevenue * 0.3; // ±15% variation
-      return {
-        month,
-        revenue: Math.max(0, (baseRevenue + variation)),
-        tickets: Math.floor((stats.totalTickets / 12) * (0.8 + Math.random() * 0.4)),
+    // Initialize last 7 days
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0]; // YYYY-MM-DD
+      const dayName = dayNames[date.getDay()];
+      weeklyMap[dateStr] = {
+        name: dayName,
+        date: dateStr,
+        revenue: 0,
+        tickets: 0
       };
+    }
+
+    // Aggregate filtered transactions by date
+    filteredTransactions.forEach(transaction => {
+      if (transaction.purchase_time) {
+        // Extract date from "2025-11-26 18:48:46"
+        const purchaseDate = transaction.purchase_time.split(' ')[0]; // Get "2025-11-26"
+        
+        if (weeklyMap[purchaseDate]) {
+          weeklyMap[purchaseDate].revenue += parseFloat(transaction.amount || 0);
+          weeklyMap[purchaseDate].tickets += 1;
+        }
+      }
     });
 
-    setMonthlyData(monthlyRevenue);
+    // Convert to array and format
+    const weeklyData = Object.values(weeklyMap).map(day => ({
+      name: day.name,
+      revenue: Number(day.revenue.toFixed(2)),
+      tickets: day.tickets
+    }));
+
+    setWeeklyChartData(weeklyData);
+
+    // MONTHLY: Group by month (last 12 months)
+    const monthlyMap = {};
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    
+    // Initialize last 12 months
+    for (let i = 11; i >= 0; i--) {
+      const date = new Date(today);
+      date.setMonth(date.getMonth() - i);
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      monthlyMap[monthKey] = {
+        name: monthNames[date.getMonth()],
+        revenue: 0,
+        tickets: 0
+      };
+    }
+
+    // Aggregate filtered transactions by month
+    filteredTransactions.forEach(transaction => {
+      if (transaction.purchase_time) {
+        const purchaseDate = transaction.purchase_time.split(' ')[0]; // "2025-11-26"
+        const monthKey = purchaseDate.substring(0, 7); // "2025-11"
+        
+        if (monthlyMap[monthKey]) {
+          monthlyMap[monthKey].revenue += parseFloat(transaction.amount || 0);
+          monthlyMap[monthKey].tickets += 1;
+        }
+      }
+    });
+
+    // YEARLY: Group by year (last 3 years)
+    const yearlyMap = {};
+    const currentYear = today.getFullYear();
+    
+    // Initialize last 3 years
+    for (let i = 2; i >= 0; i--) {
+      const year = currentYear - i;
+      yearlyMap[year] = {
+        name: year.toString(),
+        revenue: 0,
+        tickets: 0
+      };
+    }
+
+    // Aggregate filtered transactions by year
+    filteredTransactions.forEach(transaction => {
+      if (transaction.purchase_time) {
+        const purchaseYear = parseInt(transaction.purchase_time.substring(0, 4));
+        
+        if (yearlyMap[purchaseYear]) {
+          yearlyMap[purchaseYear].revenue += parseFloat(transaction.amount || 0);
+          yearlyMap[purchaseYear].tickets += 1;
+        }
+      }
+    });
+
+    // Store monthly and yearly data
+    const monthlyData = Object.values(monthlyMap).map(month => ({
+      name: month.name,
+      revenue: Number(month.revenue.toFixed(2)),
+      tickets: month.tickets
+    }));
+
+    const yearlyData = Object.values(yearlyMap).map(year => ({
+      name: year.name,
+      revenue: Number(year.revenue.toFixed(2)),
+      tickets: year.tickets
+    }));
+
+    // Store in state
+    setMonthlyChartData(monthlyData);
+    setYearlyChartData(yearlyData);
+  };
+
+  // Handle merchant filter change
+  const handleMerchantFilterChange = (merchantId) => {
+    setSelectedMerchant(merchantId);
+    generateChartDataFromTransactions(allTransactions, merchantId);
   };
 
   // Format helpers
   const formatCurrency = (amount) => {
     const n = parseFloat(amount) || 0;
     return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'BDT',
       minimumFractionDigits: 2,
-    })
-      .format(n)
-      .replace('BDT', '৳');
+      maximumFractionDigits: 2
+    }).format(n) + ' ৳';
   };
 
   const formatNumber = (number) => {
-    return new Intl.NumberFormat('en-US').format(number);
+    return new Intl.NumberFormat('en-US').format(number || 0);
   };
 
   useEffect(() => {
-    fetchFilterOptions();
-    fetchSummaryData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    fetchDashboardData();
   }, []);
 
   const containerStyle = sidebarVisible
     ? { padding: '16px', backgroundColor: '#F5F5F5', overflowX: 'hidden', minHeight: '100vh', marginLeft: '193px' }
     : { padding: '16px', backgroundColor: '#F5F5F5', overflowX: 'hidden', minHeight: '100vh' };
 
-  // -----------------------------
-  // Prepare chart data for views
-  // -----------------------------
-
-  // Weekly data: mock data for last 7 days
-  const weeklyData = useMemo(() => {
-    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    return days.map(day => ({
-      name: day,
-      revenue: Math.random() * 20000 + 5000, // Random revenue between 5k-25k
-      tickets: Math.floor(Math.random() * 50 + 10), // Random tickets between 10-60
-    }));
-  }, []);
-
-  // Yearly data: mock data for last 3 years
-  const yearlyData = useMemo(() => {
-    const currentYear = new Date().getFullYear();
-    return [currentYear - 2, currentYear - 1, currentYear].map(year => ({
-      name: year.toString(),
-      revenue: (Math.random() * 100000 + 50000) * (year === currentYear ? 1.2 : 1), // Current year 20% higher
-      tickets: Math.floor(Math.random() * 1000 + 500),
-    }));
-  }, []);
-
-  // Monthly data prepared for the current year
-  const monthlyChartPrepared = useMemo(() => {
-    return monthlyData.map(m => ({ 
-      name: m.month, 
-      revenue: Number((m.revenue || 0).toFixed(2)),
-      tickets: m.tickets 
-    }));
-  }, [monthlyData]);
-
   // Decide dataset based on chartView
-  const chartData = chartView === 'weekly' ? weeklyData : chartView === 'yearly' ? yearlyData : monthlyChartPrepared;
+  const chartData = chartView === 'weekly' ? weeklyChartData : chartView === 'yearly' ? yearlyChartData : monthlyChartData;
 
   // Y axis max for nicer scale
   const yMax = useMemo(() => {
     if (!chartData || chartData.length === 0) return 80000;
-    const max = Math.max(...chartData.map(d => d.revenue), 80000);
+    const max = Math.max(...chartData.map(d => d.revenue), 100);
     if (max <= 1000) return Math.ceil(max / 100) * 100;
     if (max <= 10000) return Math.ceil(max / 1000) * 1000;
     return Math.ceil(max / 10000) * 10000;
   }, [chartData]);
 
-  // Tooltip formatter
-  const tooltipFormatter = (value) => {
-    return formatCurrency(value);
-  };
-
   // Bar colors
-  const BAR_PRIMARY = '#3b82f6'; // blue
-  const BAR_SECOND = '#1d4ed8'; // darker blue
+  const BAR_PRIMARY = '#3b82f6';
+  const BAR_SECOND = '#1d4ed8';
 
   const showAlert = (message, variant) => {
-    // You can implement toast notifications here
     console.log(`${variant}: ${message}`);
   };
 
@@ -284,7 +352,7 @@ const Homepage = ({ sidebarVisible = false }) => {
         }}>
           <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>Total Tickets Sold</div>
           <div style={{ fontSize: '24px', fontWeight: '600', color: '#333' }}>{formatNumber(stats.totalTickets)}</div>
-          <div style={{ fontSize: '11px', color: '#666', marginTop: '4px' }}>Across all merchants</div>
+          <div style={{ fontSize: '11px', color: '#666', marginTop: '4px' }}>Out of {formatNumber(stats.totalAllotment)} allotted</div>
         </div>
 
         <div style={{
@@ -315,9 +383,9 @@ const Homepage = ({ sidebarVisible = false }) => {
           boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
           padding: '16px'
         }}>
-          <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>Avg. Ticket Value</div>
-          <div style={{ fontSize: '24px', fontWeight: '600', color: '#333' }}>{formatCurrency(stats.averageTicketValue)}</div>
-          <div style={{ fontSize: '11px', color: '#666', marginTop: '4px' }}>Per ticket average</div>
+          <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>Available Tickets</div>
+          <div style={{ fontSize: '24px', fontWeight: '600', color: '#333' }}>{formatNumber(stats.totalAvailable)}</div>
+          <div style={{ fontSize: '11px', color: '#666', marginTop: '4px' }}>Ready to sell</div>
         </div>
       </div>
 
@@ -336,7 +404,31 @@ const Homepage = ({ sidebarVisible = false }) => {
           marginBottom: '20px'
         }}>
           <h2 style={{ margin: 0, fontSize: '16px', fontWeight: '600' }}>Revenue Overview</h2>
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          {/* <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+       
+            <select
+              value={selectedMerchant}
+              onChange={(e) => handleMerchantFilterChange(e.target.value)}
+              style={{
+                padding: '6px 12px',
+                borderRadius: '4px',
+                border: '1px solid #ddd',
+                fontSize: '11px',
+                backgroundColor: 'white',
+                color: '#666',
+                cursor: 'pointer',
+                minWidth: '120px'
+              }}
+            >
+              <option value="all">All Merchants</option>
+              {merchantSalesData.map(merchant => (
+                <option key={merchant.merchant_id} value={merchant.merchant_id}>
+                  {merchant.merchant_name}
+                </option>
+              ))}
+            </select>
+
+
             <button
               onClick={() => setChartView('weekly')}
               style={{
@@ -379,14 +471,14 @@ const Homepage = ({ sidebarVisible = false }) => {
             >
               Yearly
             </button>
-          </div>
+          </div> */}
         </div>
 
         {/* Recharts Area */}
         <div style={{ height: 320 }}>
           {(!chartData || chartData.length === 0) ? (
             <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666' }}>
-              No data available for this view
+              {/* No data available for this view */}
             </div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
@@ -422,28 +514,28 @@ const Homepage = ({ sidebarVisible = false }) => {
       </div>
 
       {/* Main Card Container (Merchant Summary) */}
-      <div style={{
+      {/* <div style={{
         backgroundColor: 'white',
         borderRadius: '8px',
         boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
         padding: '10px'
-      }}>
+      }}> */}
         {/* Header Section */}
-        <div style={{
+        {/* <div style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           marginBottom: '10px',
           padding: '8px 0'
-        }}>
-          <div>
+        }}> */}
+          {/* <div>
             <h2 style={{ margin: 0, fontSize: '16px', fontWeight: '600' }}>Merchant Sales Summary</h2>
             <p style={{ margin: '2px 0 0 0', fontSize: '12px', color: '#666' }}>
-              Overview of ticket sales by merchant ({summaryData.length} merchants)
+              Overview of ticket sales by merchant ({merchantSalesData.length} merchants)
             </p>
-          </div>
-          <button
-            onClick={fetchSummaryData}
+          </div> */}
+          {/* <button
+            onClick={fetchDashboardData}
             style={{
               padding: '8px 16px',
               borderRadius: '4px',
@@ -460,24 +552,25 @@ const Homepage = ({ sidebarVisible = false }) => {
           >
             <RefreshCw size={14} />
             Refresh
-          </button>
-        </div>
+          </button> */}
+        {/* </div> */}
 
         {/* Table */}
-        <table className="table table-bordered table-hover table-sm align-middle" style={{ fontSize: '12px', lineHeight: '1.8' }}>
+        {/* <table className="table table-bordered table-hover table-sm align-middle" style={{ fontSize: '12px', lineHeight: '1.8' }}>
           <thead className="table-light">
             <tr>
               <th className="py-2 px-3 fw-semibold text-center" style={{ width: "60px" }}>S/N</th>
               <th className="py-2 px-3 fw-semibold text-start">Merchant Name</th>
+              <th className="py-2 px-3 fw-semibold text-center">Allotment</th>
+              <th className="py-2 px-3 fw-semibold text-center">Available</th>
               <th className="py-2 px-3 fw-semibold text-center">Tickets Sold</th>
               <th className="py-2 px-3 fw-semibold text-end">Total Revenue</th>
-              <th className="py-2 px-3 fw-semibold text-center" style={{ width: "100px" }}>Actions</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan="5" className="text-center py-4">
+                <td colSpan="6" className="text-center py-4">
                   <div style={{ display: 'inline-block' }}>
                     <div style={{
                       width: '32px',
@@ -491,14 +584,14 @@ const Homepage = ({ sidebarVisible = false }) => {
                   <p style={{ marginTop: '8px', color: '#666' }}>Loading sales data...</p>
                 </td>
               </tr>
-            ) : summaryData.length === 0 ? (
+            ) : merchantSalesData.length === 0 ? (
               <tr>
-                <td colSpan="5" className="text-center text-muted py-4">
+                <td colSpan="6" className="text-center text-muted py-4">
                   No sales data available
                 </td>
               </tr>
             ) : (
-              summaryData.map((merchant, index) => (
+              merchantSalesData.map((merchant, index) => (
                 <tr key={index} className="align-middle">
                   <td className="py-1 px-3 text-center">{index + 1}</td>
                   <td className="py-1 px-3">
@@ -511,94 +604,53 @@ const Homepage = ({ sidebarVisible = false }) => {
                       padding: '4px 12px',
                       borderRadius: '4px',
                       fontSize: '11px',
+                      backgroundColor: '#f3f4f6',
+                      color: '#374151',
+                      fontWeight: '600'
+                    }}>
+                      {formatNumber(merchant.ticket_allotment || 0)}
+                    </span>
+                  </td>
+                  <td className="py-1 px-3 text-center">
+                    <span style={{
+                      padding: '4px 12px',
+                      borderRadius: '4px',
+                      fontSize: '11px',
+                      backgroundColor: '#fef3c7',
+                      color: '#92400e',
+                      fontWeight: '600'
+                    }}>
+                      {formatNumber(merchant.ticket_available || 0)}
+                    </span>
+                  </td>
+                  <td className="py-1 px-3 text-center">
+                    <span style={{
+                      padding: '4px 12px',
+                      borderRadius: '4px',
+                      fontSize: '11px',
                       backgroundColor: '#e3f2fd',
                       color: '#1976d2',
                       fontWeight: '600'
                     }}>
-                      {formatNumber(merchant.ticket_qty || 0)}
+                      {formatNumber(merchant.total_sales || 0)}
                     </span>
                   </td>
                   <td className="py-1 px-3 text-end" style={{ fontWeight: '600', color: '#28a745' }}>
-                    {formatCurrency(merchant.total_amount || 0)}
-                  </td>
-                  <td className="py-1 px-3 text-center">
-                    <div style={{ display: 'flex', gap: '4px', justifyContent: 'center' }}>
-                      <button
-                        style={{
-                          padding: '4px 8px',
-                          border: '1px solid #d1d5db',
-                          borderRadius: '4px',
-                          background: 'white',
-                          color: '#333',
-                          cursor: 'pointer',
-                          fontSize: '11px',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '4px'
-                        }}
-                        title="View Details"
-                        onClick={() => {
-                          // Navigate to detailed report for this merchant
-                          window.location.href = `/admin/detailed-report?merchant=${merchant.merchant_name}`;
-                        }}
-                      >
-                        <Eye size={12} />
-                        View
-                      </button>
-                      <button
-                        style={{
-                          padding: '4px 8px',
-                          border: '1px solid #d1d5db',
-                          borderRadius: '4px',
-                          background: 'white',
-                          color: '#333',
-                          cursor: 'pointer',
-                          fontSize: '11px',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '4px'
-                        }}
-                        title="Download Report"
-                        onClick={async () => {
-                          try {
-                            const response = await fetch(`${BASE_URL}/report-download?merchant_name=${encodeURIComponent(merchant.merchant_name)}`, {
-                              method: 'POST',
-                              headers: getAuthHeaders(),
-                              credentials: 'include',
-                            });
-
-                            if (response.ok) {
-                              const blob = await response.blob();
-                              const url = window.URL.createObjectURL(blob);
-                              const a = document.createElement('a');
-                              a.href = url;
-                              a.download = `merchant-${merchant.merchant_name}-report.xlsx`;
-                              a.click();
-                              window.URL.revokeObjectURL(url);
-                            }
-                          } catch (error) {
-                            console.error('Download error:', error);
-                          }
-                        }}
-                      >
-                        <Download size={12} />
-                        Download
-                      </button>
-                    </div>
+                    {formatCurrency(merchant.total_sales_amount || 0)}
                   </td>
                 </tr>
               ))
             )}
           </tbody>
-        </table>
+        </table> */}
 
         {/* Table Info */}
-        {!loading && summaryData.length > 0 && (
+        {/* {!loading && merchantSalesData.length > 0 && (
           <div style={{ marginTop: '5px', fontSize: '12px', color: '#666' }}>
-            Showing {summaryData.length} merchant summaries • Total: {formatNumber(stats.totalTickets)} tickets • Revenue: {formatCurrency(stats.totalRevenue)}
+            Showing {merchantSalesData.length} merchant summaries • Total: {formatNumber(stats.totalTickets)} tickets • Revenue: {formatCurrency(stats.totalRevenue)}
           </div>
-        )}
-      </div>
+        )} */}
+      {/* </div> */}
 
       {/* Footer */}
       <div style={{ marginTop: '16px', textAlign: 'center' }}>

@@ -13,7 +13,7 @@ import CreateRolePage from '../components/CreateRolePage';
 import PaymentAccountPage from '../components/PaymentAccountPage';
 import DetailsReportListPage from '../components/DetailsReportListPage';
 import SalesSummaryReportPage from '../components/SalesSummaryReportPage';
-
+import MerchantWiseAllotmentPage from '../components/MerchantWiseAllotmentPage';
 
 const routes = [
    
@@ -29,7 +29,9 @@ const routes = [
     { path: '/admin/detailed-report', exact: true, name: 'DetailsReportListPage', component: (props) => <DetailsReportListPage{...props} /> },
     { path: '/admin/summary-report', exact: true, name: 'SalesSummaryReportPage', component: (props) => <SalesSummaryReportPage{...props} /> },
 
+    { path: '/admin/merchant-allotment', exact: true, name: 'MerchantWiseAllotmentPage', component: (props) => <MerchantWiseAllotmentPage{...props} /> },
 
+   
     { path: '/admin/invoices/create', exact: true, name: 'InvoiceCreatePage', component: (props) => <InvoiceCreatePage{...props} /> },
     {
         path: '/admin/invoices/edit/:id',

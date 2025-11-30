@@ -83,21 +83,22 @@ body {
 }
 
 .submit-btn {
-  position: relative;
   display: inline-block;
   padding: 10px 20px;
   color: #5c98ab;
   font-size: 16px;
-  text-decoration: none;
   text-transform: uppercase;
-  overflow: hidden;
-  transition: 0.5s;
-  margin-top: 20px;
-  letter-spacing: 4px;
-  background: transparent;
-  border: none;
+  background: transparent;   /* Keep transparent or add a color if you want */
+  border: 2px solid #5c98ab; /* Fixed border */
+  border-radius: 5px;         /* Rounded corners */
   cursor: pointer;
   width: 100%;
+  transition: all 0.3s ease;  /* Smooth hover effect */
+}
+
+.submit-btn:hover:not(:disabled) {
+  background: #5c98ab;  /* Fill background on hover */
+  color: #fff;          /* Text color on hover */
 }
 
 .submit-btn:disabled {
@@ -105,19 +106,9 @@ body {
   cursor: not-allowed;
 }
 
-.submit-btn:hover:not(:disabled) {
-  background: #5c98ab;
-  color: #fff;
-  border-radius: 5px;
-  box-shadow: 0 0 5px #5c98ab,
-              0 0 25px #5c98ab,
-              0 0 50px #5c98ab,
-              0 0 100px #5c98ab;
-}
-
+/* Remove span animations completely */
 .submit-btn span {
-  position: absolute;
-  display: block;
+  display: none;
 }
 
 .submit-btn span:nth-child(1) {
