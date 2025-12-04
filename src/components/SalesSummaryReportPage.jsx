@@ -90,6 +90,11 @@ const SalesSummaryReportPage = ({ sidebarVisible = false }) => {
         }
         return false;
     };
+    const formatBDT = (number) => {
+  const num = Math.round(Number(number)); // round to nearest integer
+  if (Number.isNaN(num)) return '0';
+  return num.toLocaleString('en-IN'); // format with commas
+};
 
     // Fetch reports and filter options on mount
     useEffect(() => {
@@ -763,14 +768,16 @@ const SalesSummaryReportPage = ({ sidebarVisible = false }) => {
                         <tr>
                             <th className="py-2 px-3 fw-semibold text-center" style={{ width: "60px" }}>S/N</th>
                             <th className="py-2 px-3 fw-semibold text-start">Merchant Name</th>
-                            <th className="py-2 px-3 fw-semibold text-center">Ticket Quantity</th>
-                            <th className="py-2 px-3 fw-semibold text-center">Total Amount</th>
+                            <th className="py-2 px-3 fw-semibold text-center">Ticket Allotment</th>
+                            <th className="py-2 px-3 fw-semibold text-center">Ticket Available</th>
+                            <th className="py-2 px-3 fw-semibold text-center">Total Sales</th>
+                            <th className="py-2 px-3 fw-semibold text-center">Total Sales Amount</th>
                             <th className="py-2 px-3 fw-semibold text-center" style={{ width: "80px" }}>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {loading ? (
-                            <SkeletonLoader type="table" count={5} columns={5} />
+                            <SkeletonLoader type="table" count={5} columns={7} />
                         ) : reports.length > 0 ? (
                             reports.map((report, i) => (
                                 <tr key={i} className="align-middle">
@@ -789,11 +796,40 @@ const SalesSummaryReportPage = ({ sidebarVisible = false }) => {
                                             color: '#1976d2',
                                             fontWeight: '600'
                                         }}>
-                                            {report.ticket_qty || 0}
+                                             {formatBDT(report.ticket_allotment)}
                                         </span>
                                     </td>
-                                    <td className="py-1 px-3 text-end fw-bold" style={{ color: '#28a745' }}>
-                                        ${parseFloat(report.total_amount || 0).toFixed(2)}
+                                    <td className="py-1 px-3 text-center">
+                                        <span style={{
+                                            padding: '4px 12px',
+                                            borderRadius: '4px',
+                                            fontSize: '11px',
+                                            backgroundColor: '#f3e5f5',
+                                            color: '#7b1fa2',
+                                            fontWeight: '600'
+                                        }}>
+                                             {formatBDT(report.ticket_available)}
+                                    
+                                        </span>
+                                    </td>
+                                    <td className="py-1 px-3 text-center">
+                                        <span style={{
+                                            padding: '4px 12px',
+                                            borderRadius: '4px',
+                                            fontSize: '11px',
+                                            backgroundColor: '#fff3e0',
+                                            color: '#e65100',
+                                            fontWeight: '600'
+                                        }}>
+                                            {formatBDT(report.total_sales)}
+                                          
+                                        </span>
+                                    </td>
+                                    {/* <td className="py-1 px-3 text-center fw-bold" style={{ color: '#28a745' }}>
+                                        ৳{parseFloat(report.total_sales_amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    </td> */}
+                                    <td className="py-1 px-3 text-center fw-bold" style={{ color: '#28a745' }}>
+                                        ৳{formatBDT(report.total_sales_amount)}
                                     </td>
 
                                     {/* Actions column */}
@@ -836,7 +872,7 @@ const SalesSummaryReportPage = ({ sidebarVisible = false }) => {
                             ))
                         ) : (
                             <tr>
-                                <td colSpan="5" className="text-center text-muted py-3">
+                                <td colSpan="7" className="text-center text-muted py-3">
                                     {Object.keys(appliedFilters).some(key => appliedFilters[key])
                                         ? "No summary reports found matching your filters"
                                         : "No summary reports available"

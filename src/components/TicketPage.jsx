@@ -19,6 +19,7 @@ const TicketPage = ({ sidebarVisible = false }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const [loading, setLoading] = useState(false);
     const [generating, setGenerating] = useState(false);
+    const [searchTicketNo, setSearchTicketNo] = useState('');
     const [updating, setUpdating] = useState(false);
     const [actionMenuId, setActionMenuId] = useState(null);
     const [filterOptions, setFilterOptions] = useState({
@@ -129,6 +130,8 @@ const TicketPage = ({ sidebarVisible = false }) => {
         fetchTickets();
     }, []);
 
+
+
     // Handle click outside for action menu
     useEffect(() => {
         const handleClickOutside = () => setActionMenuId(null);
@@ -185,6 +188,7 @@ const TicketPage = ({ sidebarVisible = false }) => {
             
             if (searchMerchant) queryParams.append('merchant_id', searchMerchant);
             if (searchTicketType) queryParams.append('ticket_type', searchTicketType);
+            if (searchTicketNo) queryParams.append('ticket_no', searchTicketNo);
             if (searchStatus) queryParams.append('status', searchStatus);
             if (searchDateFrom) queryParams.append('start_time', `${searchDateFrom} 00:00:00`);
             if (searchDateTo) queryParams.append('end_time', `${searchDateTo} 23:59:59`);
@@ -226,15 +230,21 @@ const TicketPage = ({ sidebarVisible = false }) => {
         }
     };
 
-    const handleClear = () => {
-        setSearchMerchant('');
-        setSearchTicketType('');
-        setSearchStatus('');
-        setSearchDateFrom('');
-        setSearchDateTo('');
-        setCurrentPage(1);
+   const handleClear = () => {
+    setSearchMerchant('');
+    setSearchTicketType('');
+    setSearchStatus('');
+    setSearchDateFrom('');
+    setSearchDateTo('');
+    setSearchTicketNo('');
+    setCurrentPage(1);
+
+    // Wait for state to apply
+    setTimeout(() => {
         fetchTickets(1);
-    };
+    }, 0);
+};
+
 
     const handleFilter = () => {
         setCurrentPage(1);
@@ -592,6 +602,30 @@ const TicketPage = ({ sidebarVisible = false }) => {
                                 placeholder="All Types"
                             />
                         </div>
+                        {/* Ticket No Input */}
+<div style={{ display: 'flex', flexDirection: 'column' }}>
+    <label style={{ marginBottom: '4px', fontSize: '13px', fontWeight: '500', color: '#333' }}>
+        Ticket No
+    </label>
+   <input
+    type="text"
+    value={searchTicketNo}
+    onChange={(e) => setSearchTicketNo(e.target.value)}
+    placeholder="Enter ticket no"
+    style={{
+        padding: '8px 12px',
+        border: '1px solid #ccc',
+        borderRadius: '4px',
+        fontSize: '13px',
+        width: '150px',
+        backgroundColor: '#fff',
+        position: "relative",     // <-- IMPORTANT
+        zIndex: 1000,             // <-- SOLVES PASTE ISSUE
+    }}
+/>
+
+</div>
+
 
                         {/* Status Dropdown */}
                         <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -883,7 +917,7 @@ const TicketPage = ({ sidebarVisible = false }) => {
                                     <td className="py-1 px-3 text-center">{ticket.customer_name || 'N/A'}</td>
                                     <td className="py-1 px-3 text-center">{ticket.customer_district || 'N/A'}</td>
                                     <td className="py-1 px-3 text-end fw-bold" style={{ color: '#28a745' }}>
-                                        ${parseFloat(ticket.amount || 0).toFixed(2)}
+                                        ৳{parseFloat(ticket.amount || 0).toFixed(2)}
                                     </td>
 
                                     {/* Actions column */}
@@ -950,7 +984,7 @@ const TicketPage = ({ sidebarVisible = false }) => {
 
                 {/* Pagination Controls */}
                 {!loading && paginator?.total_pages > 1 && (
-                    <div style={{ marginTop: '10px' }}>
+                    <div style={{ marginTop: '-25px' }}>
                         {renderPagination()}
                     </div>
                 )}
@@ -1000,7 +1034,7 @@ const TicketPage = ({ sidebarVisible = false }) => {
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                             <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                <label style={{ marginBottom: '5px', fontSize: '13px', fontWeight: '500' }}>Series *</label>
+                                <label style={{ marginBottom: '5px', fontSize: '13px', fontWeight: '500' }}>Series  <span style="color: red;">*</span></label>
                                 <input
                                     type="text"
                                     name="series"
@@ -1018,7 +1052,7 @@ const TicketPage = ({ sidebarVisible = false }) => {
 
                             <div style={{ display: 'flex', gap: '15px' }}>
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                                    <label style={{ marginBottom: '5px', fontSize: '13px', fontWeight: '500' }}>Start Range *</label>
+                                    <label style={{ marginBottom: '5px', fontSize: '13px', fontWeight: '500' }}>Start Range <span style={{ color: 'red' }}>*</span></label>
                                     <input
                                         type="number"
                                         name="ticket_number_range_start"
@@ -1034,7 +1068,7 @@ const TicketPage = ({ sidebarVisible = false }) => {
                                     />
                                 </div>
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                                    <label style={{ marginBottom: '5px', fontSize: '13px', fontWeight: '500' }}>End Range *</label>
+                                    <label style={{ marginBottom: '5px', fontSize: '13px', fontWeight: '500' }}>End Range <span style={{ color: 'red' }}>*</span></label>
                                     <input
                                         type="number"
                                         name="ticket_number_range_end"
@@ -1070,7 +1104,7 @@ const TicketPage = ({ sidebarVisible = false }) => {
                                     />
                                 </div>
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                                    <label style={{ marginBottom: '5px', fontSize: '13px', fontWeight: '500' }}>Ticket Type (Optional)</label>
+                                    <label style={{ marginBottom: '5px', fontSize: '13px', fontWeight: '500' }}>Ticket Type <span style={{ color: 'red' }}>*</span></label>
                                     <select
                                         name="ticket_type"
                                         value={generateForm.ticket_type}
@@ -1083,7 +1117,7 @@ const TicketPage = ({ sidebarVisible = false }) => {
                                             backgroundColor: 'white'
                                         }}
                                     >
-                                        <option value="">Select Type (Optional)</option>
+                                        <option value="">Select Type  <span style="color: red;">*</span></option>
                                         <option value="virtual">Virtual</option>
                                         <option value="physical">Physical</option>
                                     </select>
@@ -1091,7 +1125,7 @@ const TicketPage = ({ sidebarVisible = false }) => {
                             </div>
 
                             <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                <label style={{ marginBottom: '5px', fontSize: '13px', fontWeight: '500' }}>Merchant (Optional)</label>
+                                <label style={{ marginBottom: '5px', fontSize: '13px', fontWeight: '500' }}>Merchant <span style={{ color: 'red' }}>*</span></label>
                                 <select
                                     name="merchant_id"
                                     value={generateForm.merchant_id}

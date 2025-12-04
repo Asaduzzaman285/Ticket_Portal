@@ -37,7 +37,7 @@ const Sidebar = () => {
                         <div className="sb-nav-link-icon">
                             <LayoutDashboard size={20} />
                         </div>
-                        Lottery Dashboard
+                         Dashboard
                     </NavLink>
 
                      <NavLink className="nav-link" to="/admin/ticket" activeClassName="active">
@@ -72,10 +72,7 @@ const Sidebar = () => {
         <BarChart3 size={16} className="me-2" />
         Sales Summary Report
     </NavLink>
-    <NavLink className="nav-link ms-4" to="/admin/merchant-allotment" style={{ fontSize: '13px' }}>
-        <Store size={16} className="me-2" />
-        Merchant Wise Allotment
-    </NavLink>
+
 </div>
 
              

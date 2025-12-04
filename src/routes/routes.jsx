@@ -9,7 +9,7 @@ import RoleListPage from '../components/RoleListPage';
 import CreateRolePage from '../components/CreateRolePage';
 import DetailsReportListPage from '../components/DetailsReportListPage';
 import SalesSummaryReportPage from '../components/SalesSummaryReportPage';
-import MerchantWiseAllotmentPage from '../components/MerchantWiseAllotmentPage';
+// import MerchantWiseAllotmentPage from '../components/MerchantWiseAllotmentPage';
 import TicketPage from '../components/TicketPage';
 
 const routes = [
@@ -26,7 +26,7 @@ const routes = [
     { path: '/admin/detailed-report', exact: true, name: 'DetailsReportListPage', component: (props) => <DetailsReportListPage{...props} /> },
     { path: '/admin/summary-report', exact: true, name: 'SalesSummaryReportPage', component: (props) => <SalesSummaryReportPage{...props} /> },
 
-    { path: '/admin/merchant-allotment', exact: true, name: 'MerchantWiseAllotmentPage', component: (props) => <MerchantWiseAllotmentPage{...props} /> },
+    // { path: '/admin/merchant-allotment', exact: true, name: 'MerchantWiseAllotmentPage', component: (props) => <MerchantWiseAllotmentPage{...props} /> },
      { path: '/admin/ticket', exact: true, name: 'TicketPage', component: (props) => <TicketPage{...props} /> },
    
    

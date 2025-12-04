@@ -1,5 +1,5 @@
 // DetailsReportListPage.jsx
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import Paginate from './Paginate';
 import { FaHome } from 'react-icons/fa';
 import Select from 'react-select';
@@ -8,13 +8,14 @@ import SkeletonLoader from './SkeletonLoader';
 const BASE_URL = `${import.meta.env.VITE_APP_API_BASE_URL}/api/v1/details-report`;
 
 const DetailsReportListPage = ({ sidebarVisible = false }) => {
-    const [allReports, setAllReports] = useState([]);
+    // Only current page reports (server-side pagination)
     const [reports, setReports] = useState([]);
     const [searchTicketNo, setSearchTicketNo] = useState('');
     const [searchMerchant, setSearchMerchant] = useState('');
     const [searchTicketType, setSearchTicketType] = useState('');
     const [searchStartTime, setSearchStartTime] = useState('');
     const [searchEndTime, setSearchEndTime] = useState('');
+    // const [searchTicketNo, setSearchTicketNo] = useState('');
     const [alertMessage, setAlertMessage] = useState('');
     const [alertVariant, setAlertVariant] = useState('success');
     const [currentPage, setCurrentPage] = useState(1);
@@ -46,21 +47,22 @@ const DetailsReportListPage = ({ sidebarVisible = false }) => {
 
     const [filterOptionsLoading, setFilterOptionsLoading] = useState(true);
 
-    const ITEMS_PER_PAGE = 10;
-
     const ticketTypeOptions = [
         { value: '', label: 'All Types' },
         { value: 'virtual', label: 'Virtual' },
         { value: 'physical', label: 'Physical' }
     ];
+
     const handleDateChange = (setter) => (e) => {
         setter(e.target.value);
     };
+
     const formatDisplayDate = (dateStr) => {
         if (!dateStr) return '';
         const [year, month, day] = dateStr.split('-');
         return `${day}-${month}-${year}`;
     };
+
     const statusOptions = {
         'closed': { label: 'Closed', color: '#28a745' },
         'open': { label: 'Open', color: '#007bff' },
@@ -98,13 +100,13 @@ const DetailsReportListPage = ({ sidebarVisible = false }) => {
         return false;
     };
 
-    // Fetch reports and filter options on mount
+    // Load filter options + initial reports
     useEffect(() => {
         fetchFilterOptions();
-        fetchReports();
+        fetchReports(1);
     }, []);
 
-    // Handle click outside for action menu
+    // Click outside to close action menu
     useEffect(() => {
         const handleClickOutside = () => setActionMenuId(null);
         if (actionMenuId !== null) {
@@ -120,54 +122,7 @@ const DetailsReportListPage = ({ sidebarVisible = false }) => {
         return `${day}-${month}-${year} ${time}`;
     };
 
-    const formatInputDateTime = (dateTimeStr) => {
-        if (!dateTimeStr) return '';
-        // Convert from "YYYY-MM-DD HH:MM:SS" to "YYYY-MM-DDTHH:MM" for datetime-local input
-        return dateTimeStr.substring(0, 16).replace(' ', 'T');
-    };
-
-    const formatApiDateTime = (inputValue) => {
-        if (!inputValue) return '';
-        // Convert from "YYYY-MM-DDTHH:MM" to "YYYY-MM-DD HH:MM:SS"
-        return inputValue.replace('T', ' ') + ':00';
-    };
-
-    const handleDateTimeChange = (setter) => (e) => {
-        setter(e.target.value);
-    };
-
-    // Memoized filtered reports
-    const filteredReports = useMemo(() => {
-        if (!appliedFilters.ticket_no && !appliedFilters.merchant_id && !appliedFilters.ticket_type && !appliedFilters.start_time && !appliedFilters.end_time) {
-            return allReports;
-        }
-
-        return allReports.filter(report => {
-            const matchesTicketNo = appliedFilters.ticket_no === '' ||
-                report.ticket_no.toLowerCase().includes(appliedFilters.ticket_no.toLowerCase());
-            const matchesMerchant = appliedFilters.merchant_id === '' ||
-                report.merchant_id.toString() === appliedFilters.merchant_id.toString();
-            const matchesTicketType = appliedFilters.ticket_type === '' ||
-                report.ticket_type === appliedFilters.ticket_type;
-
-            let matchesDate = true;
-            if (appliedFilters.start_time && report.purchase_time) {
-                matchesDate = matchesDate && report.purchase_time >= appliedFilters.start_time;
-            }
-            if (appliedFilters.end_time && report.purchase_time) {
-                matchesDate = matchesDate && report.purchase_time <= appliedFilters.end_time;
-            }
-
-            return matchesTicketNo && matchesMerchant && matchesTicketType && matchesDate;
-        });
-    }, [allReports, appliedFilters]);
-
-    // Paginate whenever currentPage or filteredReports changes
-    useEffect(() => {
-        paginateReports(currentPage);
-    }, [currentPage, filteredReports]);
-
-    // Fetch filter options
+    // Fetch filter options (merchants)
     const fetchFilterOptions = async () => {
         try {
             setFilterOptionsLoading(true);
@@ -204,22 +159,23 @@ const DetailsReportListPage = ({ sidebarVisible = false }) => {
         }
     };
 
-    // Fetch reports
-    const fetchReports = async (filters = {}) => {
+    // SERVER-SIDE PAGINATION + FILTERING (FIXED)
+    const fetchReports = async (page = 1) => {
         try {
             setLoading(true);
 
             const queryParams = new URLSearchParams();
-            if (filters.ticket_no) queryParams.append('ticket_no', filters.ticket_no);
-            if (filters.merchant_id) queryParams.append('merchant_id', filters.merchant_id);
-            if (filters.ticket_type) queryParams.append('ticket_type', filters.ticket_type);
-            if (filters.start_time) queryParams.append('start_time', filters.start_time);
-            if (filters.end_time) queryParams.append('end_time', filters.end_time);
+            queryParams.append('page', page);
+
+            if (appliedFilters.ticket_no) queryParams.append('ticket_no', appliedFilters.ticket_no);
+            if (appliedFilters.merchant_id) queryParams.append('merchant_id', appliedFilters.merchant_id);
+           if (appliedFilters.ticket_type) queryParams.append('ticket_type', appliedFilters.ticket_type);
+            if (appliedFilters.ticket_no) queryParams.append('ticket_no', appliedFilters.ticket_no);
+            if (appliedFilters.start_time) queryParams.append('start_time', appliedFilters.start_time);
+            if (appliedFilters.end_time) queryParams.append('end_time', appliedFilters.end_time);
 
             const queryString = queryParams.toString();
-            const url = queryString
-                ? `${BASE_URL}/list-paginate?${queryString}`
-                : `${BASE_URL}/list-paginate`;
+            const url = `${BASE_URL}/list-paginate?${queryString}`;
 
             const response = await fetch(url, {
                 method: 'GET',
@@ -236,9 +192,22 @@ const DetailsReportListPage = ({ sidebarVisible = false }) => {
             const result = await response.json();
 
             if (result.status === 'success') {
-                const reportsData = result?.data?.data ?? result?.data ?? [];
-                setAllReports(reportsData);
-                setCurrentPage(1);
+                const reportsData = result?.data?.data ?? [];
+                setReports(reportsData);
+                setCurrentPage(page);
+
+                // Use server-provided paginator
+                if (result.data?.paginator) {
+                    setPaginator(result.data.paginator);
+                } else {
+                    // Fallback if paginator missing
+                    setPaginator(prev => ({
+                        ...prev,
+                        current_page: page,
+                        total_count: reportsData.length,
+                        current_page_items_count: reportsData.length
+                    }));
+                }
             } else {
                 throw new Error(result.message || 'Failed to fetch reports');
             }
@@ -250,34 +219,12 @@ const DetailsReportListPage = ({ sidebarVisible = false }) => {
         }
     };
 
-    const paginateReports = (page) => {
-        const totalItems = filteredReports.length;
-        const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE) || 1;
-        const startIndex = (page - 1) * ITEMS_PER_PAGE;
-        const endIndex = startIndex + ITEMS_PER_PAGE;
-        const paginatedReports = filteredReports.slice(startIndex, endIndex);
-
-        setReports(paginatedReports);
-        setPaginator({
-            current_page: page,
-            total_pages: totalPages,
-            previous_page_url: page > 1 ? page - 1 : null,
-            next_page_url: page < totalPages ? page + 1 : null,
-            record_per_page: ITEMS_PER_PAGE,
-            current_page_items_count: paginatedReports.length,
-            total_count: totalItems,
-            pagination_last_page: totalPages
-        });
-    };
-
     const handleClear = () => {
         setSearchTicketNo('');
         setSearchMerchant('');
         setSearchTicketType('');
-        setSearchStartTime('');
-        setSearchEndTime('');
         setSearchDateFrom('');
-        setSearchDateTo('');  
+        setSearchDateTo('');
         setAppliedFilters({
             ticket_no: '',
             merchant_id: '',
@@ -286,7 +233,7 @@ const DetailsReportListPage = ({ sidebarVisible = false }) => {
             end_time: ''
         });
         setCurrentPage(1);
-        fetchReports();
+        fetchReports(1);
     };
 
     const handleFilter = () => {
@@ -297,19 +244,15 @@ const DetailsReportListPage = ({ sidebarVisible = false }) => {
             start_time: searchDateFrom ? `${searchDateFrom} 00:00:00` : '',
             end_time: searchDateTo ? `${searchDateTo} 23:59:59` : ''
         };
-    
+
         setAppliedFilters(filters);
-    
-        const activeFilters = Object.fromEntries(
-            Object.entries(filters).filter(([_, value]) => value !== '')
-        );
-    
-        if (Object.keys(activeFilters).length === 0) {
-            fetchReports();
-            showAlert("Showing all reports", "info");
-        } else {
-            fetchReports(activeFilters);
-        }
+        setCurrentPage(1);
+        fetchReports(1);
+    };
+
+    const handlePageChange = (page) => {
+        setCurrentPage(page);
+        fetchReports(page);
     };
 
     const handleDownloadAll = async () => {
@@ -340,17 +283,13 @@ const DetailsReportListPage = ({ sidebarVisible = false }) => {
                 throw new Error('Failed to download report');
             }
 
-            // Get filename from Content-Disposition header or use default
             const contentDisposition = response.headers.get('Content-Disposition');
             let filename = 'details-report.xlsx';
             if (contentDisposition) {
                 const filenameMatch = contentDisposition.match(/filename="?(.+)"?/i);
-                if (filenameMatch) {
-                    filename = filenameMatch[1];
-                }
+                if (filenameMatch) filename = filenameMatch[1];
             }
 
-            // Download the file
             const blob = await response.blob();
             const downloadUrl = window.URL.createObjectURL(blob);
             const link = document.createElement('a');
@@ -393,17 +332,13 @@ const DetailsReportListPage = ({ sidebarVisible = false }) => {
                 throw new Error('Failed to download ticket report');
             }
 
-            // Get filename from Content-Disposition header or use default
             const contentDisposition = response.headers.get('Content-Disposition');
             let filename = `ticket-${report.ticket_no}.xlsx`;
             if (contentDisposition) {
                 const filenameMatch = contentDisposition.match(/filename="?(.+)"?/i);
-                if (filenameMatch) {
-                    filename = filenameMatch[1];
-                }
+                if (filenameMatch) filename = filenameMatch[1];
             }
 
-            // Download the file
             const blob = await response.blob();
             const downloadUrl = window.URL.createObjectURL(blob);
             const link = document.createElement('a');
@@ -419,10 +354,6 @@ const DetailsReportListPage = ({ sidebarVisible = false }) => {
             console.error('Error downloading ticket report:', error);
             showAlert('Failed to download ticket report', 'danger');
         }
-    };
-
-    const handlePageChange = (page) => {
-        setCurrentPage(page);
     };
 
     const showAlert = (message, variant) => {
@@ -516,27 +447,6 @@ const DetailsReportListPage = ({ sidebarVisible = false }) => {
                     </div>
                 ) : (
                     <div style={{ display: 'flex', gap: '8px', justifyContent: 'start', alignItems: 'flex-end', marginBottom: '10px', flexWrap: 'wrap' }}>
-                        {/* Ticket Number Input */}
-                        {/* <div style={{ display: 'flex', flexDirection: 'column' }}>
-                            <label style={{ marginBottom: '4px', fontSize: '13px', fontWeight: '500', color: '#333' }}>
-                                Ticket Number
-                            </label>
-                            <input
-                                type="text"
-                                value={searchTicketNo}
-                                onChange={(e) => setSearchTicketNo(e.target.value)}
-                                placeholder="Enter ticket number"
-                                style={{
-                                    padding: '8px 12px',
-                                    border: '1px solid #ccc',
-                                    borderRadius: '4px',
-                                    fontSize: '13px',
-                                    width: '200px',
-                                    backgroundColor: '#fff',
-                                }}
-                            />
-                        </div> */}
-
                         {/* Merchant Dropdown */}
                         <div style={{ display: 'flex', flexDirection: 'column' }}>
                             <label style={{ marginBottom: '4px', fontSize: '13px', fontWeight: '500', color: '#333' }}>
@@ -646,7 +556,27 @@ const DetailsReportListPage = ({ sidebarVisible = false }) => {
                                 placeholder="All Types"
                             />
                         </div>
-   
+                         {/* Ticket No Input */}
+<div style={{ display: 'flex', flexDirection: 'column' }}>
+    <label style={{ marginBottom: '4px', fontSize: '13px', fontWeight: '500', color: '#333' }}>
+        Ticket No
+    </label>
+    <input
+        type="text"
+        value={searchTicketNo}
+        onChange={(e) => setSearchTicketNo(e.target.value)}
+        placeholder="Enter ticket no"
+        style={{
+            padding: '8px 12px',
+            border: '1px solid #ccc',
+            borderRadius: '4px',
+            fontSize: '13px',
+            width: '150px',
+            backgroundColor: '#fff',
+        }}
+    />
+</div>
+
                         {/* Date From */}
                         <div style={{ display: 'flex', flexDirection: 'column', position: 'relative' }}>
                             <label style={{ marginBottom: '4px', fontSize: '13px', fontWeight: '500', color: '#333' }}>
@@ -714,7 +644,6 @@ const DetailsReportListPage = ({ sidebarVisible = false }) => {
                                 }}
                             />
                         </div>
-
 
                         {/* Filter Button */}
                         <button
@@ -869,7 +798,7 @@ const DetailsReportListPage = ({ sidebarVisible = false }) => {
                                     </td>
                                     <td className="py-1 px-3">{report.customer_mobile || 'N/A'}</td>
                                     <td className="py-1 px-3 text-center">{formatDisplayDateTime(report.purchase_time)}</td>
-                                    <td className="py-1 px-3 text-end">{parseFloat(report.amount || 0).toFixed(2)}</td>
+                                    <td className="py-1 px-3 text-center">৳{parseFloat(report.amount || 0).toFixed(2)}</td>
 
                                     {/* Actions column */}
                                     <td className="py-1 px-3 text-center position-relative">
@@ -925,7 +854,7 @@ const DetailsReportListPage = ({ sidebarVisible = false }) => {
                 {/* Pagination Info */}
                 {!loading && (
                     <div style={{ marginTop: '5px', fontSize: '12px', color: '#666' }}>
-                        Showing {paginator.current_page_items_count > 0 ? (paginator.current_page - 1) * ITEMS_PER_PAGE + 1 : 0} to {Math.min(paginator.current_page * ITEMS_PER_PAGE, paginator.total_count)} of {paginator.total_count} results
+                        Showing {paginator.current_page_items_count > 0 ? (paginator.current_page - 1) * paginator.record_per_page + 1 : 0} to {Math.min(paginator.current_page * paginator.record_per_page, paginator.total_count)} of {paginator.total_count} results
                     </div>
                 )}
 
