@@ -4,16 +4,13 @@ import UserPage from '../components/UserPage';
 // import BankPage from '../components/BankPage';
 // import BankAccount from '../components/BankAccount';
 import ApplicationPage from '../components/ApplicationPage';
-import PortalRolePage from '../components/PortalRolePage';
-import InvoiceListPage from '../components/InvoiceListPage';
-import InvoiceCreatePage from '../components/InvoiceCreatePage';
-import InvoiceEditPage from '../components/InvoiceEditpage';
+
 import RoleListPage from '../components/RoleListPage';
 import CreateRolePage from '../components/CreateRolePage';
-import PaymentAccountPage from '../components/PaymentAccountPage';
 import DetailsReportListPage from '../components/DetailsReportListPage';
 import SalesSummaryReportPage from '../components/SalesSummaryReportPage';
 import MerchantWiseAllotmentPage from '../components/MerchantWiseAllotmentPage';
+import TicketPage from '../components/TicketPage';
 
 const routes = [
    
@@ -30,7 +27,8 @@ const routes = [
     { path: '/admin/summary-report', exact: true, name: 'SalesSummaryReportPage', component: (props) => <SalesSummaryReportPage{...props} /> },
 
     { path: '/admin/merchant-allotment', exact: true, name: 'MerchantWiseAllotmentPage', component: (props) => <MerchantWiseAllotmentPage{...props} /> },
-
+     { path: '/admin/ticket', exact: true, name: 'TicketPage', component: (props) => <TicketPage{...props} /> },
+   
    
     { path: '/admin/invoices/create', exact: true, name: 'InvoiceCreatePage', component: (props) => <InvoiceCreatePage{...props} /> },
     {

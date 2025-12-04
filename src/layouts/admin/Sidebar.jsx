@@ -12,7 +12,8 @@ import {
   WalletCards ,
   FileText,
   BarChart3,  // Add this
-  Store
+  Store,
+  Ticket
 } from 'lucide-react';
 
 const Sidebar = () => {
@@ -39,12 +40,12 @@ const Sidebar = () => {
                         Lottery Dashboard
                     </NavLink>
 
-                    {/* <NavLink className="nav-link" to="/admin/detailed-report" activeClassName="active">
-                        <div className="sb-nav-link-icon">
-                            <i className="fa-solid fa-file-invoice" style={{ fontSize: '20px' }}></i>
+                     <NavLink className="nav-link" to="/admin/ticket" activeClassName="active">
+                         <div className="sb-nav-link-icon">
+                            <Ticket size={20} />
                         </div>
-                        Sales Report
-                    </NavLink> */}
+                        TicketPage
+                    </NavLink> 
    {/* Report Menu */}
 <div
     className="nav-link d-flex justify-content-between align-items-center"
