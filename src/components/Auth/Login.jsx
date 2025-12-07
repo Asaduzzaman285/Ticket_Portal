@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Swal from 'sweetalert2';
-import Logo from '../../assets/image/lotterylogo.png'; // Import the image as a module
+import Logo from '../../assets/image/lotterylogo.png';
 import './Login.css';
 
 const Login = () => {
@@ -69,8 +69,6 @@ const Login = () => {
         
         const { email, password } = formData;
         try {
-            // Remove unnecessary client-side CORS header; handled by server
-            // axios.defaults.headers.post['Access-Control-Allow-Origin'] = '*';
             axios.defaults.headers.post['Content-Type'] = 'application/json';
 
             const response = await axios.post(
@@ -79,8 +77,15 @@ const Login = () => {
             );
 
             if (response.data.status === 'success') {
+                // Store user data in localStorage
                 localStorage.setItem('authToken', response.data.data.user.access_token);
                 localStorage.setItem('userName', response.data.data.user.name);
+                localStorage.setItem('userEmail', response.data.data.user.email);
+                localStorage.setItem('userId', response.data.data.user.userId);
+                
+                // Store roles and permissions
+                localStorage.setItem('userRoles', JSON.stringify(response.data.data.roles));
+                localStorage.setItem('permissions', JSON.stringify(response.data.data.permissions));
 
                 // Success Toast
                 SuccessToast.fire({
@@ -98,10 +103,38 @@ const Login = () => {
                 setIsLoading(false);
             }
         } catch (err) {
-            ErrorToast.fire({
-                icon: 'error',
-                title: 'Something went wrong. Please try again.'
-            });
+            // Handle specific error cases
+            if (err.response) {
+                // Server responded with an error status
+                if (err.response.status === 401) {
+                    ErrorToast.fire({
+                        icon: 'error',
+                        title: 'Invalid email or password'
+                    });
+                } else if (err.response.status === 422) {
+                    ErrorToast.fire({
+                        icon: 'error',
+                        title: 'Validation error. Please check your input.'
+                    });
+                } else {
+                    ErrorToast.fire({
+                        icon: 'error',
+                        title: 'Something went wrong. Please try again.'
+                    });
+                }
+            } else if (err.request) {
+                // Request was made but no response received
+                ErrorToast.fire({
+                    icon: 'error',
+                    title: 'Network error. Please check your connection.'
+                });
+            } else {
+                // Something else happened
+                ErrorToast.fire({
+                    icon: 'error',
+                    title: 'Something went wrong. Please try again.'
+                });
+            }
             setIsLoading(false);
         }
     };
@@ -125,6 +158,7 @@ const Login = () => {
                             onFocus={(e) => isLoading && e.target.blur()}
                             placeholder=""
                             required
+                            autoComplete="email"
                         />
                         <label>Email</label>
                     </div>
@@ -141,6 +175,7 @@ const Login = () => {
                             placeholder=""
                             required
                             style={{ paddingRight: '40px' }}
+                            autoComplete="current-password"
                         />
                         <label>Password</label>
                         <i 
@@ -158,13 +193,36 @@ const Login = () => {
                         />
                     </div>
 
-                    <button type="submit" className="submit-btn" disabled={isLoading}>
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                        {isLoading ? 'Logging in...' : 'Login'}
-                    </button>
+                 <button 
+  type="submit" 
+  className="submit-btn" 
+  disabled={isLoading}
+  style={{
+    backgroundColor: '#4d90fe',
+    color: 'white',
+    border: 'none',
+    borderRadius: '5px',
+    padding: '12px 24px',
+    fontSize: '16px',
+    fontWeight: '600',
+    cursor: isLoading ? 'not-allowed' : 'pointer',
+    opacity: isLoading ? 0.7 : 1,
+    transition: 'background-color 0.3s ease',
+    width: '100%',
+    marginTop: '20px'
+  }}
+  onMouseOver={(e) => !isLoading && (e.target.style.backgroundColor = '#357ae8')}
+  onMouseOut={(e) => !isLoading && (e.target.style.backgroundColor = '#4d90fe')}
+>
+  {isLoading ? (
+    <>
+      <i className="fas fa-spinner fa-spin me-2"></i>
+      Logging in...
+    </>
+  ) : (
+    'Login'
+  )}
+</button>
                 </form>
             </div>
         </div>

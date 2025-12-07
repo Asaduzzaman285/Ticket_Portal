@@ -1176,7 +1176,7 @@ const UserPage = ({ sidebarVisible = false }) => {
                   }}
                 >
                   {/* Name */}
-                  <div>
+                  <div className="autofill-fix">
                     <label
                       style={{
                         display: "block",
@@ -1201,7 +1201,7 @@ const UserPage = ({ sidebarVisible = false }) => {
                     />
                   </div>
                   {/* Email */}
-                  <div className="email-input-wrapper">
+                  <div className="autofill-fix">
                     <label
                       style={{
                         display: "block",
@@ -1223,23 +1223,11 @@ const UserPage = ({ sidebarVisible = false }) => {
                         border: "1px solid #d1d5db",
                         borderRadius: "4px",
                         fontSize: "13px",
-                        color: "black",
-                        backgroundColor: "white",
                       }}
                     />
-                    <style>{`
-                      .email-input-wrapper input:-webkit-autofill,
-                      .email-input-wrapper input:-webkit-autofill:hover,
-                      .email-input-wrapper input:-webkit-autofill:focus,
-                      .email-input-wrapper input:-webkit-autofill:active {
-                        -webkit-box-shadow: 0 0 0px 1000px white inset;
-                        -webkit-text-fill-color: black !important;
-                        transition: background-color 5000s ease-in-out;
-                      }
-                    `}</style>
                   </div>
                   {/* Password */}
-                  <div>
+                  <div className="autofill-fix">
                     <label
                       style={{
                         display: "block",
@@ -1552,7 +1540,7 @@ const UserPage = ({ sidebarVisible = false }) => {
         </div>
       )}
 
-      {/* Global Skeleton Animation */}
+      {/* Global Skeleton Animation & Autofill Fix */}
       <style>{`
         @keyframes pulse {
           0% { opacity: 1; }
@@ -1599,6 +1587,20 @@ const UserPage = ({ sidebarVisible = false }) => {
         
         .text-gray-600 {
           color: #4b5563;
+        }
+        
+        /* Fix for browser autofill styles */
+        .autofill-fix input:-webkit-autofill,
+        .autofill-fix input:-webkit-autofill:hover,
+        .autofill-fix input:-webkit-autofill:focus,
+        .autofill-fix input:-webkit-autofill:active {
+          -webkit-box-shadow: 0 0 0px 1000px white inset !important;
+          -webkit-text-fill-color: #000 !important;
+          transition: background-color 5000s ease-in-out 0s !important;
+        }
+        
+        .autofill-fix input {
+          color: #000 !important;
         }
       `}</style>
     </div>
