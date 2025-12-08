@@ -14,6 +14,9 @@ const SalesSummaryReportPage = ({ sidebarVisible = false }) => {
     const [searchTicketType, setSearchTicketType] = useState('');
     const [searchDateFrom, setSearchDateFrom] = useState('');
     const [searchDateTo, setSearchDateTo] = useState('');
+    const [showTicketSummaryModal, setShowTicketSummaryModal] = useState(false);
+    const [selectedTicketSummary, setSelectedTicketSummary] = useState(null);
+    const [selectedMerchantName, setSelectedMerchantName] = useState('');
     const [alertMessage, setAlertMessage] = useState('');
     const [alertVariant, setAlertVariant] = useState('success');
     const [currentPage, setCurrentPage] = useState(1);
@@ -59,7 +62,12 @@ const SalesSummaryReportPage = ({ sidebarVisible = false }) => {
         const [year, month, day] = dateStr.split('-');
         return `${day}-${month}-${year}`;
     };
-
+    const handleViewTicketSummary = (report) => {
+    setSelectedTicketSummary(report.ticket_summary || []);
+    setSelectedMerchantName(report.merchant_name || 'Merchant');
+    setShowTicketSummaryModal(true);
+    setActionMenuId(null); // Close any open action menu
+};
     // Get auth headers
     const getAuthHeaders = () => {
         let token = localStorage.getItem('authToken')
@@ -787,19 +795,47 @@ const SalesSummaryReportPage = ({ sidebarVisible = false }) => {
                                             : i + 1}
                                     </td>
                                     <td className="py-1 px-3">{report.merchant_name || 'N/A'}</td>
-                                    <td className="py-1 px-3 text-center">
-                                        <span style={{
-                                            padding: '4px 12px',
-                                            borderRadius: '4px',
-                                            fontSize: '11px',
-                                            backgroundColor: '#e3f2fd',
-                                            color: '#1976d2',
-                                            fontWeight: '600'
-                                        }}>
-                                             {formatBDT(report.ticket_allotment)}
-                                        </span>
-                                    </td>
-                                    <td className="py-1 px-3 text-center">
+                                     <td className="py-1 px-3 text-center">
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                                                <span style={{
+                                                    padding: '4px 12px',
+                                                    borderRadius: '4px',
+                                                    fontSize: '11px',
+                                                    backgroundColor: '#e3f2fd',
+                                                    color: '#1976d2',
+                                                    fontWeight: '600'
+                                                }}>
+                                                    {formatBDT(report.ticket_allotment)}
+                                                </span>
+                                                
+                                                {report.ticket_summary && report.ticket_summary.length > 0 && (
+                                                    <button
+                                                        onClick={() => handleViewTicketSummary(report)}
+                                                        style={{
+                                                            background: 'none',
+                                                            border: 'none',
+                                                            cursor: 'pointer',
+                                                            padding: '2px 6px',
+                                                            borderRadius: '4px',
+                                                            transition: 'all 0.2s',
+                                                            color: '#1976d2'
+                                                        }}
+                                                        onMouseEnter={(e) => {
+                                                            e.target.style.backgroundColor = '#e3f2fd';
+                                                            e.target.style.transform = 'scale(1.1)';
+                                                        }}
+                                                        onMouseLeave={(e) => {
+                                                            e.target.style.backgroundColor = 'transparent';
+                                                            e.target.style.transform = 'scale(1)';
+                                                        }}
+                                                        title="View Ticket Details"
+                                                    >
+                                                        <i className="fa-solid fa-eye" style={{ fontSize: '12px' }}></i>
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </td>
+                                                                            <td className="py-1 px-3 text-center">
                                         <span style={{
                                             padding: '4px 12px',
                                             borderRadius: '4px',
@@ -959,7 +995,221 @@ const SalesSummaryReportPage = ({ sidebarVisible = false }) => {
         .autofill-fix input {
           color: #000 !important;
         }
+          /* Modal scrollbar styling */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
             `}</style>
+            {/* Ticket Summary Modal */}
+{showTicketSummaryModal && (
+    <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 9999,
+        padding: '20px'
+    }} onClick={() => setShowTicketSummaryModal(false)}>
+        <div style={{
+            backgroundColor: 'white',
+            borderRadius: '8px',
+            padding: '20px',
+            maxWidth: '800px',
+            width: '100%',
+            maxHeight: '80vh',
+            overflow: 'auto'
+        }} onClick={(e) => e.stopPropagation()}>
+            {/* Modal Header */}
+            <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '15px',
+                paddingBottom: '10px',
+                borderBottom: '1px solid #e0e0e0'
+            }}>
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '600' }}>
+                    <i className="fa-solid fa-ticket" style={{ marginRight: '8px', color: '#1976d2' }}></i>
+                    Ticket Details - {selectedMerchantName}
+                </h3>
+                <button
+                    onClick={() => setShowTicketSummaryModal(false)}
+                    style={{
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontSize: '18px',
+                        color: '#666',
+                        padding: '0 4px',
+                        borderRadius: '4px'
+                    }}
+                    onMouseEnter={(e) => e.target.style.color = '#ff0000'}
+                    onMouseLeave={(e) => e.target.style.color = '#666'}
+                >
+                    <i className="fa-solid fa-times"></i>
+                </button>
+            </div>
+
+            {/* Modal Body */}
+            <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+                {selectedTicketSummary && selectedTicketSummary.length > 0 ? (
+                    <table style={{
+                        width: '100%',
+                        borderCollapse: 'collapse',
+                        fontSize: '12px'
+                    }}>
+                        <thead>
+                            <tr style={{
+                                backgroundColor: '#f8f9fa',
+                                borderBottom: '2px solid #dee2e6'
+                            }}>
+                                <th style={{
+                                    padding: '10px',
+                                    textAlign: 'left',
+                                    fontWeight: '600',
+                                    color: '#495057',
+                                    border: '1px solid #dee2e6'
+                                }}>Series</th>
+                                <th style={{
+                                    padding: '10px',
+                                    textAlign: 'left',
+                                    fontWeight: '600',
+                                    color: '#495057',
+                                    border: '1px solid #dee2e6'
+                                }}>Start Ticket</th>
+                                <th style={{
+                                    padding: '10px',
+                                    textAlign: 'left',
+                                    fontWeight: '600',
+                                    color: '#495057',
+                                    border: '1px solid #dee2e6'
+                                }}>End Ticket</th>
+                                <th style={{
+                                    padding: '10px',
+                                    textAlign: 'right',
+                                    fontWeight: '600',
+                                    color: '#495057',
+                                    border: '1px solid #dee2e6'
+                                }}>Total Tickets</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {selectedTicketSummary.map((item, index) => (
+                                <tr key={index} style={{
+                                    borderBottom: '1px solid #dee2e6',
+                                    backgroundColor: index % 2 === 0 ? '#ffffff' : '#f8f9fa'
+                                }}>
+                                    <td style={{
+                                        padding: '10px',
+                                        border: '1px solid #dee2e6',
+                                        fontWeight: '500'
+                                    }}>{item.series || 'N/A'}</td>
+                                    <td style={{
+                                        padding: '10px',
+                                        border: '1px solid #dee2e6',
+                                        fontFamily: 'monospace'
+                                    }}>{item.start_ticket || 'N/A'}</td>
+                                    <td style={{
+                                        padding: '10px',
+                                        border: '1px solid #dee2e6',
+                                        fontFamily: 'monospace'
+                                    }}>{item.end_ticket || 'N/A'}</td>
+                                    <td style={{
+                                        padding: '10px',
+                                        border: '1px solid #dee2e6',
+                                        textAlign: 'right',
+                                        fontWeight: '600',
+                                        color: '#1976d2'
+                                    }}>{formatBDT(item.total_tickets)}</td>
+                                </tr>
+                            ))}
+                            {/* Total Row */}
+                            {selectedTicketSummary.length > 0 && (
+                                <tr style={{
+                                    backgroundColor: '#e3f2fd',
+                                    fontWeight: 'bold',
+                                    borderTop: '2px solid #1976d2'
+                                }}>
+                                    <td colSpan="3" style={{
+                                        padding: '10px',
+                                        border: '1px solid #dee2e6',
+                                        textAlign: 'right'
+                                    }}>Total:</td>
+                                    <td style={{
+                                        padding: '10px',
+                                        border: '1px solid #dee2e6',
+                                        textAlign: 'right',
+                                        color: '#1976d2'
+                                    }}>
+                                        {formatBDT(selectedTicketSummary.reduce((sum, item) => sum + (Number(item.total_tickets) || 0), 0))}
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                ) : (
+                    <div style={{
+                        padding: '40px',
+                        textAlign: 'center',
+                        color: '#666'
+                    }}>
+                        <i className="fa-solid fa-inbox" style={{ fontSize: '48px', color: '#ddd', marginBottom: '15px' }}></i>
+                        <p style={{ margin: 0 }}>No ticket summary available</p>
+                    </div>
+                )}
+            </div>
+
+            {/* Modal Footer */}
+            <div style={{
+                marginTop: '20px',
+                paddingTop: '15px',
+                borderTop: '1px solid #e0e0e0',
+                textAlign: 'right'
+            }}>
+                <button
+                    onClick={() => setShowTicketSummaryModal(false)}
+                    style={{
+                        padding: '8px 20px',
+                        borderRadius: '4px',
+                        backgroundColor: '#6c757d',
+                        color: 'white',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                        fontWeight: '500',
+                        transition: 'background-color 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = '#5a6268'}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = '#6c757d'}
+                >
+                    <i className="fa-solid fa-times" style={{ marginRight: '6px' }}></i>
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+)}
+        
         </div>
     );
 };
