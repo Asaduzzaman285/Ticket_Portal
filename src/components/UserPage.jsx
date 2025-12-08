@@ -9,7 +9,7 @@ const UserPage = ({ sidebarVisible = false }) => {
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [roles, setRoles] = useState([]);
   const [merchants, setMerchants] = useState([]);
-  
+  const [modalLoading, setModalLoading] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -366,73 +366,100 @@ const UserPage = ({ sidebarVisible = false }) => {
     }
   };
 
-  const handleEdit = async (id) => {
-    try {
-      const token = localStorage.getItem("authToken");
-      const res = await fetch(
-        `${import.meta.env.VITE_APP_API_BASE_URL}/api/v1/getUser`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          body: JSON.stringify({ id }),
-        }
-      );
+   // UPDATED handleEdit → opens modal INSTANTLY + shows loading spinner inside modal
+const handleEdit = async (id) => {
+  // Immediate feedback: open modal right away with loading state
+  setModalLoading(true);
+  setShowModal(true);
+  setActionMenuId(null); // close the ellipsis menu instantly
 
-      const result = await res.json().catch(() => null);
-
-      if (!res.ok || !result || !result.data) {
-        showAlert("Failed to load user details", "danger");
-        return;
+  try {
+    const token = localStorage.getItem("authToken");
+    const res = await fetch(
+      `${import.meta.env.VITE_APP_API_BASE_URL}/api/v1/getUser`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({ id }),
       }
+    );
 
-      const userData = result.data;
-      setIsEditing(true);
-      setCurrentUserId(id);
-      setName(userData.name || "");
-      setEmail(userData.email || "");
-      setPassword("");
-      setMerchantId(userData.merchant_id || "");
+    const result = await res.json().catch(() => null);
 
-      let roleIds = [];
-      try {
-        let raw = userData.role_info;
-        if (typeof raw === "string" && raw.trim()) {
-          raw = JSON.parse(raw);
-        }
-        if (Array.isArray(raw)) {
-          roleIds = raw.map((role) => {
-            if (typeof role === "object") {
-              return Number(role.id ?? role.role_id);
-            }
-            return Number(role);
-          });
-        }
-      } catch (err) {
-        console.warn("role_info parse error:", err);
-        roleIds = [];
-      }
-
-      roleIds = roleIds.filter((r) => !isNaN(Number(r))).map(Number);
-      setSelectedRoles(roleIds);
-      await loadPermissionsForRoles(roleIds);
-      setShowModal(true);
-      setActionMenuId(null);
-    } catch (err) {
-      console.error("handleEdit error:", err);
-      showAlert("Failed to load user", "danger");
+    if (!res.ok || !result || !result.data) {
+      showAlert("Failed to load user details", "danger");
+      setModalLoading(false);
+      setShowModal(false);
+      return;
     }
-  };
 
-  const handleAdd = () => {
-    resetForm();
-    setIsEditing(false);
-    setCurrentUserId(null);
-    setShowModal(true);
-  };
+    const userData = result.data;
+
+    setIsEditing(true);
+    setCurrentUserId(id);
+    setName(userData.name || "");
+    setEmail(userData.email || "");
+    setPassword("");
+    setMerchantId(userData.merchant_id || "");
+
+    // FINAL 100% WORKING ROLE PARSING (string names → ID lookup)
+    let rawRoles = userData.role_info || userData.roles || [];
+
+    if (typeof rawRoles === "string" && rawRoles.trim()) {
+      try {
+        rawRoles = JSON.parse(rawRoles);
+      } catch (e) {
+        rawRoles = [];
+      }
+    }
+
+    let roleIds = [];
+
+    if (Array.isArray(rawRoles) && rawRoles.length > 0) {
+      roleIds = rawRoles.map((item) => {
+        if (typeof item === "object" && item !== null) {
+          return Number(item.id ?? item.role_id ?? 0);
+        }
+
+        if (typeof item === "string") {
+          const foundRole = roles.find(
+            (r) => r.name.toLowerCase() === item.trim().toLowerCase()
+          );
+          return foundRole ? Number(foundRole.id) : null;
+        }
+
+        return Number(item);
+      })
+      .filter((id) => id > 0 && id !== null);
+
+      roleIds = [...new Set(roleIds)];
+    }
+
+    setSelectedRoles(roleIds);
+    await loadPermissionsForRoles(roleIds);
+
+    // Data is ready → hide loading spinner
+    setModalLoading(false);
+  } catch (err) {
+    console.error("handleEdit error:", err);
+    showAlert("Failed to load user", "danger");
+    setModalLoading(false);
+    setShowModal(false);
+  }
+};
+
+  // UPDATED handleAdd (just to be safe)
+const handleAdd = () => {
+  resetForm();
+  setIsEditing(false);
+  setCurrentUserId(null);
+  setModalLoading(false); // explicit
+  setShowModal(true);
+};
 
   const resetForm = () => {
     setName('');
@@ -1161,339 +1188,251 @@ const UserPage = ({ sidebarVisible = false }) => {
             </div>
             <div style={{ borderBottom: "1px solid #e5e7eb" }} />
             {/* Body */}
-            <div style={{ padding: "14px", overflowY: "auto", flex: 1 }}>
-              {loading ? (
-                <div style={{ textAlign: 'center', padding: '40px' }}>
-                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500 mb-4"></div>
-                  <p className="text-gray-600">Saving user...</p>
+          {/* Body */}
+<div style={{ padding: "14px", overflowY: "auto", flex: 1 }}>
+  {/* 1. Loading user details (instant feedback when clicking Edit) */}
+  {modalLoading ? (
+    <div style={{ textAlign: 'center', padding: '80px 20px' }}>
+      <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-4 border-blue-600 mb-6"></div>
+      <p style={{ fontSize: '15px', color: '#444', fontWeight: '500' }}>
+        Loading user details...
+      </p>
+    </div>
+  ) : loading ? (
+    /* 2. Saving state */
+    <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+      <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-teal-500 mb-4"></div>
+      <p style={{ fontSize: '14px', color: '#555' }}>Saving user...</p>
+    </div>
+  ) : (
+    /* 3. Actual Form – only shown when data is ready */
+    <>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+        {/* Name */}
+        <div className="autofill-fix">
+          <label style={{ display: "block", marginBottom: "6px", fontWeight: "500", fontSize: "13px" }}>
+            Name <span style={{ color: 'red' }}>*</span>
+          </label>
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Enter full name"
+            style={{ width: "100%", padding: "8px 12px", border: "1px solid #d1d5db", borderRadius: "4px", fontSize: "13px" }}
+          />
+        </div>
+
+        {/* Email */}
+        <div className="autofill-fix">
+          <label style={{ display: "block", marginBottom: "6px", fontWeight: "500", fontSize: "13px" }}>
+            Email <span style={{ color: 'red' }}>*</span>
+          </label>
+          <input
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            type="email"
+            placeholder="Enter email address"
+            style={{ width: "100%", padding: "8px 12px", border: "1px solid #d1d5db", borderRadius: "4px", fontSize: "13px" }}
+          />
+        </div>
+
+        {/* Password */}
+        <div className="autofill-fix">
+          <label style={{ display: "block", marginBottom: "6px", fontWeight: "500", fontSize: "13px" }}>
+            Password {isEditing ? "(leave blank to keep current)" : <span style={{ color: "red" }}>*</span>}
+          </label>
+          <input
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            type="password"
+            placeholder={isEditing ? "Leave blank to keep current password" : "Enter password"}
+            style={{ width: "100%", padding: "8px 12px", border: "1px solid #d1d5db", borderRadius: "4px", fontSize: "13px" }}
+          />
+        </div>
+
+        {/* Merchant */}
+        <div>
+          <label style={{ display: "block", marginBottom: "6px", fontWeight: "500", fontSize: "13px" }}>
+            Merchant (Optional)
+          </label>
+          <select
+            value={merchantId}
+            onChange={(e) => setMerchantId(e.target.value)}
+            style={{ width: "100%", padding: "8px 12px", border: "1px solid #d1d5db", borderRadius: "4px", fontSize: "13px", backgroundColor: "white" }}
+          >
+            <option value="">Select Merchant (Optional)</option>
+            {merchants.map((merchant) => (
+              <option key={merchant.value} value={merchant.value}>
+                {merchant.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* ROLES – Full original section (unchanged) */}
+      <div style={{ marginTop: "20px", gridColumn: "1 / -1" }}>
+        <label style={{ display: "block", marginBottom: "8px", fontWeight: "500", fontSize: "13px" }}>
+          Roles <span style={{ color: 'red' }}>*</span> (select one or more)
+        </label>
+
+        <div ref={dropdownRef}>
+          {/* Selected roles pill box */}
+          <div
+            onClick={() => setRolesDropdownOpen(!rolesDropdownOpen)}
+            style={{
+              minHeight: "44px",
+              padding: "6px 8px",
+              border: "1px solid #d1d5db",
+              borderRadius: "6px",
+              background: "#fff",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              flexWrap: "wrap",
+              cursor: "pointer",
+            }}
+          >
+            {selectedRoles.length === 0 ? (
+              <div style={{ color: "#999", fontSize: "13px" }}>Select roles...</div>
+            ) : (
+              selectedRoles.map((rid) => (
+                <div
+                  key={rid}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    padding: "4px 8px",
+                    borderRadius: "14px",
+                    background: "#e8f1ff",
+                    fontSize: "12px",
+                  }}
+                >
+                  <span style={{ marginRight: "6px" }}>{getRoleNameById(rid)}</span>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeRoleTag(rid);
+                    }}
+                    style={{ background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}
+                  >
+                    ×
+                  </button>
                 </div>
+              ))
+            )}
+            <div style={{ marginLeft: "auto", color: "#666" }}>
+              <i className="fa-solid fa-chevron-down"></i>
+            </div>
+          </div>
+
+          {/* Dropdown */}
+          {rolesDropdownOpen && (
+            <div
+              style={{
+                marginTop: "6px",
+                border: "1px solid #e5e7eb",
+                background: "white",
+                borderRadius: "6px",
+                boxShadow: "0 6px 16px rgba(0,0,0,0.08)",
+                padding: "8px",
+                zIndex: 50,
+              }}
+            >
+              {rolesLoading ? (
+                <div style={{ padding: "8px" }}>
+                  <SkeletonLoader type="text" count={3} />
+                </div>
+              ) : filteredRoles.length === 0 ? (
+                <div style={{ padding: "6px", color: "#999" }}>No roles found</div>
               ) : (
                 <div
                   style={{
                     display: "grid",
-                    gridTemplateColumns: "1fr 1fr",
-                    gap: "12px",
+                    gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
+                    gap: "8px",
                   }}
                 >
-                  {/* Name */}
-                  <div className="autofill-fix">
+                  {filteredRoles.map((role) => (
                     <label
+                      key={role.id}
                       style={{
-                        display: "block",
-                        marginBottom: "6px",
-                        fontWeight: "500",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        padding: "8px 10px",
+                        borderRadius: "6px",
+                        cursor: "pointer",
                         fontSize: "13px",
+                        background: "#f8f9fa",
+                        border: "1px solid #e5e7eb",
                       }}
                     >
-                      Name <span style={{ color: 'red' }}>*</span>
+                      <input
+                        type="checkbox"
+                        checked={selectedRoles.includes(Number(role.id))}
+                        onChange={() => toggleRoleSelection(Number(role.id))}
+                        style={{ width: "14px", height: "14px" }}
+                      />
+                      {role.name}
                     </label>
-                    <input
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="Enter full name"
-                      style={{
-                        width: "100%",
-                        padding: "8px 12px",
-                        border: "1px solid #d1d5db",
-                        borderRadius: "4px",
-                        fontSize: "13px",
-                      }}
-                    />
-                  </div>
-                  {/* Email */}
-                  <div className="autofill-fix">
-                    <label
-                      style={{
-                        display: "block",
-                        marginBottom: "6px",
-                        fontWeight: "500",
-                        fontSize: "13px",
-                      }}
-                    >
-                      Email <span style={{ color: 'red' }}>*</span>
-                    </label>
-                    <input
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="Enter email address"
-                      type="email"
-                      style={{
-                        width: "100%",
-                        padding: "8px 12px",
-                        border: "1px solid #d1d5db",
-                        borderRadius: "4px",
-                        fontSize: "13px",
-                      }}
-                    />
-                  </div>
-                  {/* Password */}
-                  <div className="autofill-fix">
-                    <label
-                      style={{
-                        display: "block",
-                        marginBottom: "6px",
-                        fontWeight: "500",
-                        fontSize: "13px",
-                      }}
-                    >
-                      Password{" "}
-                      {isEditing ? (
-                        "(leave blank to keep current)"
-                      ) : (
-                        <span style={{ color: "red" }}>*</span>
-                      )}
-                    </label>
-                    <input
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder={
-                        isEditing
-                          ? "Leave blank to keep current password"
-                          : "Enter password"
-                      }
-                      type="password"
-                      style={{
-                        width: "100%",
-                        padding: "8px 12px",
-                        border: "1px solid #d1d5db",
-                        borderRadius: "4px",
-                        fontSize: "13px",
-                      }}
-                    />
-                  </div>
-                  {/* Merchant */}
-                  <div>
-                    <label
-                      style={{
-                        display: "block",
-                        marginBottom: "6px",
-                        fontWeight: "500",
-                        fontSize: "13px",
-                      }}
-                    >
-                      Merchant (Optional)
-                    </label>
-                    <select
-                      value={merchantId}
-                      onChange={(e) => setMerchantId(e.target.value)}
-                      style={{
-                        width: "100%",
-                        padding: "8px 12px",
-                        border: "1px solid #d1d5db",
-                        borderRadius: "4px",
-                        fontSize: "13px",
-                        backgroundColor: "white",
-                      }}
-                    >
-                      <option value="">Select Merchant (Optional)</option>
-                      {merchantsLoading ? (
-                        <option value="" disabled>Loading merchants...</option>
-                      ) : (
-                        merchants.map((merchant) => (
-                          <option key={merchant.value} value={merchant.value}>
-                            {merchant.label}
-                          </option>
-                        ))
-                      )}
-                    </select>
-                  </div>
-                  {/* ROLES */}
-                  <div style={{ gridColumn: "1 / -1" }}>
-
-                    <label
-                      style={{
-                        display: "block",
-                        marginBottom: "8px",
-                        fontWeight: "500",
-                        fontSize: "13px",
-                      }}
-                    >
-                      Roles <span style={{ color: 'red' }}>*</span> (select one or more)
-                    </label>
-                    <div ref={dropdownRef}>
-                      {/* Selected roles pill box */}
-                      <div
-                        onClick={() => setRolesDropdownOpen(!rolesDropdownOpen)}
-                        style={{
-                          minHeight: "44px",
-                          padding: "6px 8px",
-                          border: "1px solid #d1d5db",
-                          borderRadius: "6px",
-                          background: "#fff",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "6px",
-                          flexWrap: "wrap",
-                          cursor: "pointer",
-                        }}
-                      >
-                        {selectedRoles.length === 0 ? (
-                          <div style={{ color: "#999", fontSize: "13px" }}>
-                            Select roles...
-                          </div>
-                        ) : (
-                          selectedRoles.map((rid) => (
-                            <div
-                              key={rid}
-                              style={{
-                                display: "inline-flex",
-                                alignItems: "center",
-                                padding: "4px 8px",
-                                borderRadius: "14px",
-                                background: "#e8f1ff",
-                                fontSize: "12px",
-                              }}
-                            >
-                              <span style={{ marginRight: "6px" }}>
-                                {getRoleNameById(rid)}
-                              </span>
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  removeRoleTag(rid);
-                                }}
-                                style={{
-                                  background: "none",
-                                  border: "none",
-                                  cursor: "pointer",
-                                  fontWeight: 600,
-                                }}
-                              >
-                                ×
-                              </button>
-                            </div>
-                          ))
-                        )}
-                        <div style={{ marginLeft: "auto", color: "#666" }}>
-                          <i className="fa-solid fa-chevron-down"></i>
-                        </div>
-                      </div>
-                      {/* EXPANDABLE SECTION */}
-                      {rolesDropdownOpen && (
-                        <div
-                          style={{
-                            marginTop: "6px",
-                            border: "1px solid #e5e7eb",
-                            background: "white",
-                            borderRadius: "6px",
-                            boxShadow: "0 6px 16px rgba(0,0,0,0.08)",
-                            padding: "8px",
-                            zIndex: 50,
-                          }}
-                        >
-                          {rolesLoading ? (
-                            <div style={{ padding: "8px" }}>
-                              <SkeletonLoader type="text" count={3} />
-                            </div>
-                          ) : filteredRoles.length === 0 ? (
-                            <div style={{ padding: "6px", color: "#999" }}>
-                              No roles found
-                            </div>
-                          ) : (
-                            <div
-                              style={{
-                                display: "grid",
-                                gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
-                                gap: "8px",
-                              }}
-                            >
-                              {filteredRoles.map((role) => (
-                                <label
-                                  key={role.id}
-                                  style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "6px",
-                                    padding: "8px 10px",
-                                    borderRadius: "6px",
-                                    cursor: "pointer",
-                                    fontSize: "13px",
-                                    background: "#f8f9fa",
-                                    border: "1px solid #e5e7eb",
-                                  }}
-                                >
-                                  <input
-                                    type="checkbox"
-                                    checked={selectedRoles.includes(Number(role.id))}
-                                    onChange={() => toggleRoleSelection(Number(role.id))}
-                                    style={{ width: "14px", height: "14px" }}
-                                  />
-                                  {role.name}
-                                </label>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    <div style={{ marginTop: "8px", fontSize: "12px", color: "#666" }}>
-                      {selectedRoles.length} selected
-                    </div>
-                  </div>
-
-                  {/* Permissions Section with Skeleton */}
-                  <div style={{ gridColumn: '1 / -1' }}>
-                    <label
-                      style={{
-                        display: "block",
-                        marginBottom: "8px",
-                        fontWeight: "500",
-                        fontSize: "13px",
-                      }}
-                    >
-                      Assigned Permissions
-                    </label>
-                    <div style={{
-                      backgroundColor: '#f8f9fa',
-                      borderRadius: '6px',
-                      padding: '12px',
-                      border: '1px solid #e5e7eb'
-                    }}>
-                      {modalPermissionsLoading ? (
-                        <div>
-                          <SkeletonLoader type="text" count={2} />
-                          <div style={{ marginTop: '8px' }}>
-                            <SkeletonLoader type="text" count={3} />
-                          </div>
-                        </div>
-                      ) : groupedPermissions.length > 0 ? (
-                        <div style={{
-                          display: 'grid',
-                          gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-                          gap: '8px'
-                        }}>
-                          {groupedPermissions.map((group, index) => (
-                            <div key={index} style={{
-                              backgroundColor: 'white',
-                              borderRadius: '4px',
-                              padding: '8px',
-                              border: '1px solid #e5e7eb'
-                            }}>
-                              <div style={{
-                                fontWeight: '600',
-                                fontSize: '12px',
-                                marginBottom: '6px',
-                                color: '#333'
-                              }}>
-                                {group.label}
-                              </div>
-                              <div style={{ fontSize: '11px', color: '#666' }}>
-                                {group.permissions.join(', ')}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div style={{ color: '#999', fontSize: '13px', textAlign: 'center', padding: '20px' }}>
-                          No permissions assigned. Select roles to see permissions.
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  ))}
                 </div>
               )}
             </div>
+          )}
+        </div>
+
+        <div style={{ marginTop: "8px", fontSize: "12px", color: "#666" }}>
+          {selectedRoles.length} selected
+        </div>
+      </div>
+
+      {/* Permissions Section */}
+      <div style={{ marginTop: "24px", gridColumn: "1 / -1" }}>
+        <label style={{ display: "block", marginBottom: "8px", fontWeight: "500", fontSize: "13px" }}>
+          Assigned Permissions
+        </label>
+        <div style={{ backgroundColor: '#f8f9fa', borderRadius: '6px', padding: '12px', border: '1px solid #e5e7eb' }}>
+          {modalPermissionsLoading ? (
+            <div>
+              <SkeletonLoader type="text" count={2} />
+              <div style={{ marginTop: '8px' }}>
+                <SkeletonLoader type="text" count={3} />
+              </div>
+            </div>
+          ) : groupedPermissions.length > 0 ? (
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+              gap: '8px'
+            }}>
+              {groupedPermissions.map((group, index) => (
+                <div key={index} style={{
+                  backgroundColor: 'white',
+                  borderRadius: '4px',
+                  padding: '8px',
+                  border: '1px solid #e5e7eb'
+                }}>
+                  <div style={{ fontWeight: '600', fontSize: '12px', marginBottom: '6px', color: '#333' }}>
+                    {group.label}
+                  </div>
+                  <div style={{ fontSize: '11px', color: '#666' }}>
+                    {group.permissions.join(', ')}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ color: '#999', fontSize: '13px', textAlign: 'center', padding: '20px' }}>
+              No permissions assigned. Select roles to see permissions.
+            </div>
+          )}
+        </div>
+      </div>
+    </>
+  )}
+</div>
             {/* Footer */}
             <div
               style={{
