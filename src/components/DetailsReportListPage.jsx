@@ -753,7 +753,7 @@ const DetailsReportListPage = ({ sidebarVisible = false }) => {
                             <th className="py-2 px-3 fw-semibold text-start">Merchant</th>
                             <th className="py-2 px-3 fw-semibold text-center">Type</th>
                             <th className="py-2 px-3 fw-semibold text-center">Status</th>
-                            <th className="py-2 px-3 fw-semibold text-start">Customer Mobile</th>
+                            <th className="py-2 px-3 fw-semibold text-start">Customer Info</th>
                             <th className="py-2 px-3 fw-semibold text-center">Purchase Time</th>
                             <th className="py-2 px-3 fw-semibold text-center">Price</th>
                             <th className="py-2 px-3 fw-semibold text-center" style={{ width: "80px" }}>Actions</th>
@@ -796,7 +796,23 @@ const DetailsReportListPage = ({ sidebarVisible = false }) => {
                                             {statusOptions[report.status]?.label || report.status}
                                         </span>
                                     </td>
-                                    <td className="py-1 px-3">{report.customer_mobile || 'N/A'}</td>
+                                    <td className="py-1 px-3">
+                                        <div style={{ lineHeight: '1.3' }}>
+                                            <div style={{ fontSize: '11px', fontWeight: '500' }}>
+                                                {report.customer_mobile || 'N/A'}
+                                            </div>
+                                            {report.customer_name && (
+                                                <div style={{ fontSize: '10px', color: '#666' }}>
+                                                    {report.customer_name}
+                                                </div>
+                                            )}
+                                            {report.customer_district && (
+                                                <div style={{ fontSize: '10px', color: '#888', textTransform: 'capitalize' }}>
+                                                    {report.customer_district}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </td>
                                     <td className="py-1 px-3 text-center">{formatDisplayDateTime(report.purchase_time)}</td>
                                     <td className="py-1 px-3 text-center">৳{parseFloat(report.amount || 0).toFixed(2)}</td>
 
@@ -914,6 +930,19 @@ const DetailsReportListPage = ({ sidebarVisible = false }) => {
                 .text-gray-600 {
                     color: #4b5563;
                 }
+                            /* Fix for browser autofill styles */
+        .autofill-fix input:-webkit-autofill,
+        .autofill-fix input:-webkit-autofill:hover,
+        .autofill-fix input:-webkit-autofill:focus,
+        .autofill-fix input:-webkit-autofill:active {
+          -webkit-box-shadow: 0 0 0px 1000px white inset !important;
+          -webkit-text-fill-color: #000 !important;
+          transition: background-color 5000s ease-in-out 0s !important;
+        }
+        
+        .autofill-fix input {
+          color: #000 !important;
+        }
             `}</style>
         </div>
     );

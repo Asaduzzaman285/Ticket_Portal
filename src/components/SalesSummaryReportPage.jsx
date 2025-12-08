@@ -545,7 +545,7 @@ const SalesSummaryReportPage = ({ sidebarVisible = false }) => {
                         </div>
 
                         {/* Ticket Type Dropdown */}
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        {/* <div style={{ display: 'flex', flexDirection: 'column' }}>
                             <label style={{ marginBottom: '4px', fontSize: '13px', fontWeight: '500', color: '#333' }}>
                                 Ticket Type
                             </label>
@@ -593,10 +593,10 @@ const SalesSummaryReportPage = ({ sidebarVisible = false }) => {
                                 }}
                                 placeholder="All Types"
                             />
-                        </div>
+                        </div> */}
    
                         {/* Date From */}
-                        <div style={{ display: 'flex', flexDirection: 'column', position: 'relative' }}>
+                        {/* <div style={{ display: 'flex', flexDirection: 'column', position: 'relative' }}>
                             <label style={{ marginBottom: '4px', fontSize: '13px', fontWeight: '500', color: '#333' }}>
                                 Date From
                             </label>
@@ -627,10 +627,10 @@ const SalesSummaryReportPage = ({ sidebarVisible = false }) => {
                                     pointerEvents: 'none',
                                 }}
                             />
-                        </div>
+                        </div> */}
 
                         {/* Date To */}
-                        <div style={{ display: 'flex', flexDirection: 'column', position: 'relative' }}>
+                        {/* <div style={{ display: 'flex', flexDirection: 'column', position: 'relative' }}>
                             <label style={{ marginBottom: '4px', fontSize: '13px', fontWeight: '500', color: '#333' }}>
                                 Date To
                             </label>
@@ -661,7 +661,7 @@ const SalesSummaryReportPage = ({ sidebarVisible = false }) => {
                                     pointerEvents: 'none',
                                 }}
                             />
-                        </div>
+                        </div> */}
 
                         {/* Filter Button */}
                         <button
@@ -946,6 +946,19 @@ const SalesSummaryReportPage = ({ sidebarVisible = false }) => {
                 .text-gray-600 {
                     color: #4b5563;
                 }
+                            /* Fix for browser autofill styles */
+        .autofill-fix input:-webkit-autofill,
+        .autofill-fix input:-webkit-autofill:hover,
+        .autofill-fix input:-webkit-autofill:focus,
+        .autofill-fix input:-webkit-autofill:active {
+          -webkit-box-shadow: 0 0 0px 1000px white inset !important;
+          -webkit-text-fill-color: #000 !important;
+          transition: background-color 5000s ease-in-out 0s !important;
+        }
+        
+        .autofill-fix input {
+          color: #000 !important;
+        }
             `}</style>
         </div>
     );

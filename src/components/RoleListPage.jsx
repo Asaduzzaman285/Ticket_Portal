@@ -931,6 +931,19 @@ const RoleListPage = ({ sidebarVisible = false }) => {
         .text-gray-600 {
           color: #4b5563;
         }
+                  /* Fix for browser autofill styles */
+        .autofill-fix input:-webkit-autofill,
+        .autofill-fix input:-webkit-autofill:hover,
+        .autofill-fix input:-webkit-autofill:focus,
+        .autofill-fix input:-webkit-autofill:active {
+          -webkit-box-shadow: 0 0 0px 1000px white inset !important;
+          -webkit-text-fill-color: #000 !important;
+          transition: background-color 5000s ease-in-out 0s !important;
+        }
+        
+        .autofill-fix input {
+          color: #000 !important;
+        }
       `}</style>
     </div>
   );

@@ -834,7 +834,7 @@ const TicketPage = ({ sidebarVisible = false }) => {
     </button>
 )}
 
-                        {/* <button
+                        <button
                             onClick={() => setShowUpdateModal(true)}
                             style={{
                                 padding: '8px 16px',
@@ -851,7 +851,7 @@ const TicketPage = ({ sidebarVisible = false }) => {
                         >
                             <i className="fa-solid fa-edit" style={{ marginRight: '6px', fontSize: '12px' }}></i>
                             Batch Update
-                        </button> */}
+                        </button>
                     </div>
                 </div>
 
@@ -1211,7 +1211,7 @@ const TicketPage = ({ sidebarVisible = false }) => {
             )}
 
             {/* Batch Update Modal */}
-            {/* {showUpdateModal && (
+            {showUpdateModal && (
                 <div style={{
                     position: 'fixed',
                     top: 0,
@@ -1254,7 +1254,7 @@ const TicketPage = ({ sidebarVisible = false }) => {
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                             <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                <label style={{ marginBottom: '5px', fontSize: '13px', fontWeight: '500' }}>Series <span style="color: red;">*</span></label>
+                                <label style={{ marginBottom: '5px', fontSize: '13px', fontWeight: '500' }}>Series <span style={{color: 'red'}}>*</span></label>
                                 <input
                                     type="text"
                                     name="series"
@@ -1272,7 +1272,7 @@ const TicketPage = ({ sidebarVisible = false }) => {
 
                             <div style={{ display: 'flex', gap: '15px' }}>
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                                    <label style={{ marginBottom: '5px', fontSize: '13px', fontWeight: '500' }}>Start Range <span style="color: red;">*</span></label>
+                                    <label style={{ marginBottom: '5px', fontSize: '13px', fontWeight: '500' }}>Start Range <span style={{color: 'red'}}>*</span></label>
                                     <input
                                         type="number"
                                         name="ticket_number_range_start"
@@ -1288,7 +1288,7 @@ const TicketPage = ({ sidebarVisible = false }) => {
                                     />
                                 </div>
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                                    <label style={{ marginBottom: '5px', fontSize: '13px', fontWeight: '500' }}>End Range <span style="color: red;">*</span></label>
+                                    <label style={{ marginBottom: '5px', fontSize: '13px', fontWeight: '500' }}>End Range <span style={{color: 'red'}}>*</span></label>
                                     <input
                                         type="number"
                                         name="ticket_number_range_end"
@@ -1345,7 +1345,7 @@ const TicketPage = ({ sidebarVisible = false }) => {
                             </div>
 
                             <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                <label style={{ marginBottom: '5px', fontSize: '13px', fontWeight: '500' }}>Merchant <span style="color: red;">*</span></label>
+                                <label style={{ marginBottom: '5px', fontSize: '13px', fontWeight: '500' }}>Merchant <span style={{color: 'red'}}>*</span></label>
                                 <select
                                     name="merchant_id"
                                     value={updateForm.merchant_id}
@@ -1412,7 +1412,7 @@ const TicketPage = ({ sidebarVisible = false }) => {
                         </div>
                     </div>
                 </div>
-            )} */}
+            )}
 
             {/* Global Skeleton Animation */}
             <style>{`
@@ -1462,6 +1462,19 @@ const TicketPage = ({ sidebarVisible = false }) => {
                 .text-gray-600 {
                     color: #4b5563;
                 }
+                            /* Fix for browser autofill styles */
+        .autofill-fix input:-webkit-autofill,
+        .autofill-fix input:-webkit-autofill:hover,
+        .autofill-fix input:-webkit-autofill:focus,
+        .autofill-fix input:-webkit-autofill:active {
+          -webkit-box-shadow: 0 0 0px 1000px white inset !important;
+          -webkit-text-fill-color: #000 !important;
+          transition: background-color 5000s ease-in-out 0s !important;
+        }
+        
+        .autofill-fix input {
+          color: #000 !important;
+        }
             `}</style>
         </div>
     );
