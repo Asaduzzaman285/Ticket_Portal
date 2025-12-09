@@ -1016,6 +1016,7 @@ const SalesSummaryReportPage = ({ sidebarVisible = false }) => {
 }
             `}</style>
             {/* Ticket Summary Modal */}
+   {/* Ticket Summary Modal - REPLACE THE EXISTING MODAL CODE */}
 {showTicketSummaryModal && (
     <div style={{
         position: 'fixed',
@@ -1034,7 +1035,7 @@ const SalesSummaryReportPage = ({ sidebarVisible = false }) => {
             backgroundColor: 'white',
             borderRadius: '8px',
             padding: '20px',
-            maxWidth: '800px',
+            maxWidth: '1000px',
             width: '100%',
             maxHeight: '80vh',
             overflow: 'auto'
@@ -1111,6 +1112,27 @@ const SalesSummaryReportPage = ({ sidebarVisible = false }) => {
                                     color: '#495057',
                                     border: '1px solid #dee2e6'
                                 }}>Total Tickets</th>
+                                <th style={{
+                                    padding: '10px',
+                                    textAlign: 'right',
+                                    fontWeight: '600',
+                                    color: '#495057',
+                                    border: '1px solid #dee2e6'
+                                }}>Open</th>
+                                <th style={{
+                                    padding: '10px',
+                                    textAlign: 'right',
+                                    fontWeight: '600',
+                                    color: '#495057',
+                                    border: '1px solid #dee2e6'
+                                }}>On Hold</th>
+                                <th style={{
+                                    padding: '10px',
+                                    textAlign: 'right',
+                                    fontWeight: '600',
+                                    color: '#495057',
+                                    border: '1px solid #dee2e6'
+                                }}>Closed</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1141,6 +1163,54 @@ const SalesSummaryReportPage = ({ sidebarVisible = false }) => {
                                         fontWeight: '600',
                                         color: '#1976d2'
                                     }}>{formatBDT(item.total_tickets)}</td>
+                                    <td style={{
+                                        padding: '10px',
+                                        border: '1px solid #dee2e6',
+                                        textAlign: 'right',
+                                        fontWeight: '600',
+                                        color: '#28a745'
+                                    }}>
+                                        <span style={{
+                                            padding: '2px 8px',
+                                            borderRadius: '3px',
+                                            backgroundColor: '#d4edda',
+                                            color: '#155724'
+                                        }}>
+                                            {formatBDT(item.open_count)}
+                                        </span>
+                                    </td>
+                                    <td style={{
+                                        padding: '10px',
+                                        border: '1px solid #dee2e6',
+                                        textAlign: 'right',
+                                        fontWeight: '600',
+                                        color: '#ffc107'
+                                    }}>
+                                        <span style={{
+                                            padding: '2px 8px',
+                                            borderRadius: '3px',
+                                            backgroundColor: '#fff3cd',
+                                            color: '#856404'
+                                        }}>
+                                            {formatBDT(item.on_hold_count)}
+                                        </span>
+                                    </td>
+                                    <td style={{
+                                        padding: '10px',
+                                        border: '1px solid #dee2e6',
+                                        textAlign: 'right',
+                                        fontWeight: '600',
+                                        color: '#dc3545'
+                                    }}>
+                                        <span style={{
+                                            padding: '2px 8px',
+                                            borderRadius: '3px',
+                                            backgroundColor: '#f8d7da',
+                                            color: '#721c24'
+                                        }}>
+                                            {formatBDT(item.closed_count)}
+                                        </span>
+                                    </td>
                                 </tr>
                             ))}
                             {/* Total Row */}
@@ -1162,6 +1232,30 @@ const SalesSummaryReportPage = ({ sidebarVisible = false }) => {
                                         color: '#1976d2'
                                     }}>
                                         {formatBDT(selectedTicketSummary.reduce((sum, item) => sum + (Number(item.total_tickets) || 0), 0))}
+                                    </td>
+                                    <td style={{
+                                        padding: '10px',
+                                        border: '1px solid #dee2e6',
+                                        textAlign: 'right',
+                                        color: '#28a745'
+                                    }}>
+                                        {formatBDT(selectedTicketSummary.reduce((sum, item) => sum + (Number(item.open_count) || 0), 0))}
+                                    </td>
+                                    <td style={{
+                                        padding: '10px',
+                                        border: '1px solid #dee2e6',
+                                        textAlign: 'right',
+                                        color: '#ffc107'
+                                    }}>
+                                        {formatBDT(selectedTicketSummary.reduce((sum, item) => sum + (Number(item.on_hold_count) || 0), 0))}
+                                    </td>
+                                    <td style={{
+                                        padding: '10px',
+                                        border: '1px solid #dee2e6',
+                                        textAlign: 'right',
+                                        color: '#dc3545'
+                                    }}>
+                                        {formatBDT(selectedTicketSummary.reduce((sum, item) => sum + (Number(item.closed_count) || 0), 0))}
                                     </td>
                                 </tr>
                             )}

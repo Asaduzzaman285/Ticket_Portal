@@ -15,6 +15,8 @@ const DetailsReportListPage = ({ sidebarVisible = false }) => {
     const [searchTicketType, setSearchTicketType] = useState('');
     const [searchStartTime, setSearchStartTime] = useState('');
     const [searchEndTime, setSearchEndTime] = useState('');
+    const [searchCustomerMobile, setSearchCustomerMobile] = useState('');
+
     // const [searchTicketNo, setSearchTicketNo] = useState('');
     const [alertMessage, setAlertMessage] = useState('');
     const [alertVariant, setAlertVariant] = useState('success');
@@ -32,7 +34,8 @@ const DetailsReportListPage = ({ sidebarVisible = false }) => {
         merchant_id: '',
         ticket_type: '',
         start_time: '',
-        end_time: ''
+        end_time: '',
+        customer_mobile: ''
     });
     const [paginator, setPaginator] = useState({
         current_page: 1,
@@ -62,7 +65,11 @@ const DetailsReportListPage = ({ sidebarVisible = false }) => {
         const [year, month, day] = dateStr.split('-');
         return `${day}-${month}-${year}`;
     };
-
+    const formatBDT = (number) => {
+        const num = Math.round(Number(number)); // round to nearest integer
+        if (Number.isNaN(num)) return '0';
+        return num.toLocaleString('en-IN'); // format with commas
+      };
     const statusOptions = {
         'closed': { label: 'Closed', color: '#28a745' },
         'open': { label: 'Open', color: '#007bff' },
@@ -159,97 +166,7 @@ const DetailsReportListPage = ({ sidebarVisible = false }) => {
         }
     };
 
-    // SERVER-SIDE PAGINATION + FILTERING (FIXED)
-    // const fetchReports = async (page = 1) => {
-    //     try {
-    //         setLoading(true);
 
-    //         const queryParams = new URLSearchParams();
-    //         queryParams.append('page', page);
-
-    //         if (appliedFilters.ticket_no) queryParams.append('ticket_no', appliedFilters.ticket_no);
-    //         if (appliedFilters.merchant_id) queryParams.append('merchant_id', appliedFilters.merchant_id);
-    //        if (appliedFilters.ticket_type) queryParams.append('ticket_type', appliedFilters.ticket_type);
-    //         if (appliedFilters.ticket_no) queryParams.append('ticket_no', appliedFilters.ticket_no);
-    //         if (appliedFilters.start_time) queryParams.append('start_time', appliedFilters.start_time);
-    //         if (appliedFilters.end_time) queryParams.append('end_time', appliedFilters.end_time);
-
-    //         const queryString = queryParams.toString();
-    //         const url = `${BASE_URL}/list-paginate?${queryString}`;
-
-    //         const response = await fetch(url, {
-    //             method: 'GET',
-    //             headers: getAuthHeaders(),
-    //             credentials: 'include',
-    //         });
-
-    //         if (handleUnauthorized(response)) return;
-
-    //         if (!response.ok) {
-    //             throw new Error(`Failed to fetch reports: ${response.status} ${response.statusText}`);
-    //         }
-
-    //         const result = await response.json();
-
-    //         if (result.status === 'success') {
-    //             const reportsData = result?.data?.data ?? [];
-    //             setReports(reportsData);
-    //             setCurrentPage(page);
-
-    //             // Use server-provided paginator
-    //             if (result.data?.paginator) {
-    //                 setPaginator(result.data.paginator);
-    //             } else {
-    //                 // Fallback if paginator missing
-    //                 setPaginator(prev => ({
-    //                     ...prev,
-    //                     current_page: page,
-    //                     total_count: reportsData.length,
-    //                     current_page_items_count: reportsData.length
-    //                 }));
-    //             }
-    //         } else {
-    //             throw new Error(result.message || 'Failed to fetch reports');
-    //         }
-    //     } catch (error) {
-    //         console.error('Error fetching reports:', error);
-    //         showAlert(error.message || "Failed to fetch reports", "danger");
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // };
-
-    // const handleClear = () => {
-    //     setSearchTicketNo('');
-    //     setSearchMerchant('');
-    //     setSearchTicketType('');
-    //     setSearchDateFrom('');
-    //     setSearchDateTo('');
-    //     setAppliedFilters({
-    //         ticket_no: '',
-    //         merchant_id: '',
-    //         ticket_type: '',
-    //         start_time: '',
-    //         end_time: ''
-    //     });
-    //     setCurrentPage(1);
-    //     fetchReports(1);
-    // };
-
-    // const handleFilter = () => {
-    //     const filters = {
-    //         ticket_no: searchTicketNo,
-    //         merchant_id: searchMerchant,
-    //         ticket_type: searchTicketType,
-    //         start_time: searchDateFrom ? `${searchDateFrom} 00:00:00` : '',
-    //         end_time: searchDateTo ? `${searchDateTo} 23:59:59` : ''
-    //     };
-
-    //     setAppliedFilters(filters);
-    //     setCurrentPage(1);
-    //     fetchReports(1);
-    // };
-    // Modify fetchReports to accept filters as parameter
 const fetchReports = async (page = 1, filters = null) => {
     try {
         setLoading(true);
@@ -263,6 +180,9 @@ const fetchReports = async (page = 1, filters = null) => {
         if (activeFilters.ticket_no) queryParams.append('ticket_no', activeFilters.ticket_no);
         if (activeFilters.merchant_id) queryParams.append('merchant_id', activeFilters.merchant_id);
         if (activeFilters.ticket_type) queryParams.append('ticket_type', activeFilters.ticket_type);
+        if (activeFilters.customer_mobile)
+            queryParams.append('customer_mobile', activeFilters.customer_mobile);
+         
         // Remove duplicate ticket_no line
         if (activeFilters.start_time) queryParams.append('start_time', activeFilters.start_time);
         if (activeFilters.end_time) queryParams.append('end_time', activeFilters.end_time);
@@ -317,13 +237,15 @@ const handleClear = () => {
     setSearchTicketType('');
     setSearchDateFrom('');
     setSearchDateTo('');
-    
+    setSearchCustomerMobile('');
     const emptyFilters = {
         ticket_no: '',
         merchant_id: '',
         ticket_type: '',
         start_time: '',
-        end_time: ''
+        end_time: '',
+        customer_mobile: '',
+
     };
     
     setAppliedFilters(emptyFilters);
@@ -338,7 +260,9 @@ const handleFilter = () => {
         merchant_id: searchMerchant,
         ticket_type: searchTicketType,
         start_time: searchDateFrom ? `${searchDateFrom} 00:00:00` : '',
-        end_time: searchDateTo ? `${searchDateTo} 23:59:59` : ''
+        end_time: searchDateTo ? `${searchDateTo} 23:59:59` : '',
+        customer_mobile: searchCustomerMobile,
+
     };
 
     setAppliedFilters(filters);
@@ -563,7 +487,7 @@ const handleFilter = () => {
                                         border: '1px solid #ccc',
                                         borderRadius: '4px',
                                         fontSize: '13px',
-                                        width: '200px',
+                                        width: '150px',
                                         backgroundColor: '#fff',
                                         cursor: 'pointer',
                                         minHeight: '34px',
@@ -619,7 +543,7 @@ const handleFilter = () => {
                                         border: '1px solid #ccc',
                                         borderRadius: '4px',
                                         fontSize: '13px',
-                                        width: '150px',
+                                        width: '125px',
                                         backgroundColor: '#fff',
                                         cursor: 'pointer',
                                         minHeight: '34px',
@@ -652,26 +576,48 @@ const handleFilter = () => {
                                 placeholder="All Types"
                             />
                         </div>
+
+                        {/* Customer Mobile Input */}
+                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                <label style={{ marginBottom: '4px', fontSize: '13px', fontWeight: '500', color: '#333' }}>
+                                    Customer Mobile
+                                </label>
+                                <input
+                                    type="text"
+                                    value={searchCustomerMobile}
+                                    onChange={(e) => setSearchCustomerMobile(e.target.value)}
+                                    placeholder="Enter mobile no"
+                                    style={{
+                                        padding: '8px 12px',
+                                        border: '1px solid #ccc',
+                                        borderRadius: '4px',
+                                        fontSize: '13px',
+                                        width: '120px',
+                                        backgroundColor: '#fff',
+                                    }}
+                                />
+                            </div>
+
                          {/* Ticket No Input */}
-<div style={{ display: 'flex', flexDirection: 'column' }}>
-    <label style={{ marginBottom: '4px', fontSize: '13px', fontWeight: '500', color: '#333' }}>
-        Ticket No
-    </label>
-    <input
-        type="text"
-        value={searchTicketNo}
-        onChange={(e) => setSearchTicketNo(e.target.value)}
-        placeholder="Enter ticket no"
-        style={{
-            padding: '8px 12px',
-            border: '1px solid #ccc',
-            borderRadius: '4px',
-            fontSize: '13px',
-            width: '150px',
-            backgroundColor: '#fff',
-        }}
-    />
-</div>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <label style={{ marginBottom: '4px', fontSize: '13px', fontWeight: '500', color: '#333' }}>
+                            Ticket No
+                        </label>
+                        <input
+                            type="text"
+                            value={searchTicketNo}
+                            onChange={(e) => setSearchTicketNo(e.target.value)}
+                            placeholder="Enter ticket no"
+                            style={{
+                                padding: '8px 12px',
+                                border: '1px solid #ccc',
+                                borderRadius: '4px',
+                                fontSize: '13px',
+                                width: '120px',
+                                backgroundColor: '#fff',
+                            }}
+                        />
+                    </div>
 
                         {/* Date From */}
                         <div style={{ display: 'flex', flexDirection: 'column', position: 'relative' }}>
@@ -689,7 +635,7 @@ const handleFilter = () => {
                                     border: '1px solid #ccc',
                                     borderRadius: '4px',
                                     fontSize: '13px',
-                                    width: '150px',
+                                    width: '120px',
                                     backgroundColor: '#fff',
                                     cursor: 'pointer',
                                 }}
@@ -723,7 +669,7 @@ const handleFilter = () => {
                                     border: '1px solid #ccc',
                                     borderRadius: '4px',
                                     fontSize: '13px',
-                                    width: '150px',
+                                    width: '120px',
                                     backgroundColor: '#fff',
                                     cursor: 'pointer',
                                 }}
@@ -965,9 +911,18 @@ const handleFilter = () => {
 
                 {/* Pagination Info */}
                 {!loading && (
-                    <div style={{ marginTop: '5px', fontSize: '12px', color: '#666' }}>
-                        Showing {paginator.current_page_items_count > 0 ? (paginator.current_page - 1) * paginator.record_per_page + 1 : 0} to {Math.min(paginator.current_page * paginator.record_per_page, paginator.total_count)} of {paginator.total_count} results
-                    </div>
+                <div style={{ marginTop: '5px', fontSize: '12px', color: '#666' }}>
+                Showing{" "}
+                {paginator.current_page_items_count > 0
+                    ? formatBDT((paginator.current_page - 1) * paginator.record_per_page + 1)
+                    : 0}{" "}
+                to{" "}
+                {formatBDT(Math.min(
+                    paginator.current_page * paginator.record_per_page,
+                    paginator.total_count
+                ))}{" "}
+                of {formatBDT(paginator.total_count)} results
+            </div>
                 )}
 
                 {/* Pagination Controls */}

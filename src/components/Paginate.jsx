@@ -1,4 +1,4 @@
-import React, { Fragment } from 'react'
+import React, { Fragment, useState } from 'react'
 
 function Paginate(props) {
     const paginator = props.paginator || {}
@@ -7,6 +7,8 @@ function Paginate(props) {
     const next_page_url = paginator.next_page_url
     const previous_page_url = paginator.previous_page_url
 
+    const [goToPage, setGoToPage] = useState('')
+
     function onClickPage(e, page) {
         e.preventDefault();
         if (page >= 1 && page <= total_pages) {
@@ -14,52 +16,40 @@ function Paginate(props) {
         }
     }
 
-    // Generate smart page numbers with ellipsis
+    function handleGoToPage(e) {
+        e.preventDefault();
+        const pageNum = parseInt(goToPage);
+        if (pageNum >= 1 && pageNum <= total_pages) {
+            props.pagechanged(pageNum);
+            setGoToPage('');
+        }
+    }
+
+    // Generate visible page numbers (show up to 6 pages)
     const getPageNumbers = () => {
         const pages = [];
-        const showEllipsisLeft = current_page > 4;
-        const showEllipsisRight = current_page < total_pages - 3;
-
-        // Always show first page
-        pages.push(1);
-
-        // Show ellipsis or pages near start
-        if (showEllipsisLeft) {
-            pages.push('ellipsis-left');
-        } else {
-            // Show pages 2, 3 if we're near the start
-            for (let i = 2; i <= Math.min(3, total_pages - 1); i++) {
-                pages.push(i);
-            }
-        }
-
-        // Show current page and neighbors (if not already shown)
-        const startPage = Math.max(2, current_page - 1);
-        const endPage = Math.min(total_pages - 1, current_page + 1);
+        const maxVisible = 6;
         
-        for (let i = startPage; i <= endPage; i++) {
-            if (!pages.includes(i)) {
+        if (total_pages <= maxVisible) {
+            // Show all pages if total is less than or equal to max visible
+            for (let i = 1; i <= total_pages; i++) {
+                pages.push(i);
+            }
+        } else {
+            // Show pages around current page
+            let startPage = Math.max(1, current_page - 2);
+            let endPage = Math.min(total_pages, startPage + maxVisible - 1);
+            
+            // Adjust start if we're near the end
+            if (endPage - startPage < maxVisible - 1) {
+                startPage = Math.max(1, endPage - maxVisible + 1);
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
                 pages.push(i);
             }
         }
-
-        // Show ellipsis or pages near end
-        if (showEllipsisRight) {
-            pages.push('ellipsis-right');
-        } else {
-            // Show last few pages
-            for (let i = Math.max(total_pages - 2, 2); i < total_pages; i++) {
-                if (!pages.includes(i)) {
-                    pages.push(i);
-                }
-            }
-        }
-
-        // Always show last page (if more than 1 page)
-        if (total_pages > 1 && !pages.includes(total_pages)) {
-            pages.push(total_pages);
-        }
-
+        
         return pages;
     };
 
@@ -67,40 +57,9 @@ function Paginate(props) {
 
     return (
         <Fragment>
-            <div className="d-flex justify-content-between align-items-center mb-3">
-                <div className="float-left">
-                    {/* Showing entries info */}
-                </div>
-
+            <div className="d-flex justify-content-end align-items-center mb-3">
                 <nav aria-label="Page navigation">
-                    <ul className="pagination pagination-sm justify-content-end mb-0" style={{ gap: '2px' }}>
-                        {/* First page button (<<) */}
-                        <li className={`page-item ${!previous_page_url ? 'disabled' : ''}`}>
-                            <a
-                                href="#0"
-                                className="page-link"
-                                onClick={(e) => onClickPage(e, 1)}
-                                aria-label="First"
-                                style={{
-                                    border: 'none',
-                                    background: 'transparent',
-                                    color: !previous_page_url ? '#ccc' : '#6c757d',
-                                    fontSize: '15px',
-                                    lineHeight: '1',
-                                    outline: 'none',
-                                    boxShadow: 'none',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    padding: '2px 6px',
-                                    height: '20px',
-                                    cursor: !previous_page_url ? 'not-allowed' : 'pointer'
-                                }}
-                            >
-                                &laquo;
-                            </a>
-                        </li>
-
+                    <ul className="pagination pagination-sm justify-content-end mb-0" style={{ gap: '3px', margin: 0 }}>
                         {/* Previous page button (<) */}
                         <li className={`page-item ${!previous_page_url ? 'disabled' : ''}`}>
                             <a
@@ -109,85 +68,87 @@ function Paginate(props) {
                                 onClick={(e) => onClickPage(e, current_page - 1)}
                                 aria-label="Previous"
                                 style={{
-                                    border: 'none',
-                                    background: 'transparent',
+                                    border: '1px solid #dee2e6',
+                                    background: '#fff',
                                     color: !previous_page_url ? '#ccc' : '#6c757d',
-                                    fontSize: '15px',
+                                    fontSize: '11px',
                                     lineHeight: '1',
                                     outline: 'none',
                                     boxShadow: 'none',
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                    padding: '2px 6px',
-                                    height: '20px',
-                                    cursor: !previous_page_url ? 'not-allowed' : 'pointer'
+                                    padding: '3px 6px',
+                                    height: '24px',
+                                    minWidth: '24px',
+                                    borderRadius: '3px',
+                                    cursor: !previous_page_url ? 'not-allowed' : 'pointer',
+                                    transition: 'all 0.2s'
+                                }}
+                                onMouseEnter={(e) => {
+                                    if (previous_page_url) {
+                                        e.target.style.borderColor = '#007bff';
+                                        e.target.style.color = '#007bff';
+                                    }
+                                }}
+                                onMouseLeave={(e) => {
+                                    if (previous_page_url) {
+                                        e.target.style.borderColor = '#dee2e6';
+                                        e.target.style.color = '#6c757d';
+                                    }
                                 }}
                             >
-                                &lsaquo;
+                                &lt;
                             </a>
                         </li>
 
-                        {/* Page numbers with ellipsis */}
-                        {pageNumbers.map((pageNumber, index) => {
-                            if (typeof pageNumber === 'string' && pageNumber.startsWith('ellipsis')) {
-                                return (
-                                    <li className="page-item disabled" key={pageNumber}>
-                                        <span
-                                            className="page-link"
-                                            style={{
-                                                border: 'none',
-                                                background: 'transparent',
-                                                color: '#6c757d',
-                                                fontSize: '15px',
-                                                lineHeight: '1',
-                                                padding: '2px 6px',
-                                                height: '20px',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                cursor: 'default'
-                                            }}
-                                        >
-                                            ...
-                                        </span>
-                                    </li>
-                                );
-                            }
-
-                            return (
-                                <li
-                                    className={`page-item ${current_page === pageNumber ? 'active' : ''}`}
-                                    key={`page-${pageNumber}`}
+                        {/* Page numbers */}
+                        {pageNumbers.map((pageNumber) => (
+                            <li
+                                className={`page-item ${current_page === pageNumber ? 'active' : ''}`}
+                                key={`page-${pageNumber}`}
+                            >
+                                <a
+                                    className="page-link"
+                                    href="#0"
+                                    onClick={(e) => onClickPage(e, pageNumber)}
+                                    style={{
+                                        border: current_page === pageNumber ? '1px solid #007bff' : '1px solid #dee2e6',
+                                        background: current_page === pageNumber ? '#007bff' : '#fff',
+                                        color: current_page === pageNumber ? '#fff' : '#6c757d',
+                                        minWidth: '24px',
+                                        height: '24px',
+                                        padding: '3px 6px',
+                                        fontSize: '11px',
+                                        fontWeight: current_page === pageNumber ? '600' : '400',
+                                        lineHeight: '1',
+                                        textAlign: 'center',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        borderRadius: '3px',
+                                        outline: 'none',
+                                        boxShadow: 'none',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        if (current_page !== pageNumber) {
+                                            e.target.style.borderColor = '#007bff';
+                                            e.target.style.color = '#007bff';
+                                        }
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        if (current_page !== pageNumber) {
+                                            e.target.style.borderColor = '#dee2e6';
+                                            e.target.style.color = '#6c757d';
+                                        }
+                                    }}
                                 >
-                                    <a
-                                        className="page-link"
-                                        href="#0"
-                                        onClick={(e) => onClickPage(e, pageNumber)}
-                                        style={{
-                                            border: current_page === pageNumber ? '1px solid rgb(150, 178, 209)' : '1px solid #dee2e6',
-                                            background: current_page === pageNumber ? '#007bff' : '#fff',
-                                            color: current_page === pageNumber ? '#fff' : '#007bff',
-                                            minWidth: '20px',
-                                            height: '20px',
-                                            padding: '2px 6px',
-                                            fontSize: '15px',
-                                            lineHeight: '1',
-                                            textAlign: 'center',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            borderRadius: '1.5px',
-                                            outline: 'none',
-                                            boxShadow: 'none',
-                                            cursor: 'pointer'
-                                        }}
-                                    >
-                                        {pageNumber}
-                                    </a>
-                                </li>
-                            );
-                        })}
+                                    {pageNumber}
+                                </a>
+                            </li>
+                        ))}
 
                         {/* Next page button (>) */}
                         <li className={`page-item ${!next_page_url ? 'disabled' : ''}`}>
@@ -197,50 +158,78 @@ function Paginate(props) {
                                 onClick={(e) => onClickPage(e, current_page + 1)}
                                 aria-label="Next"
                                 style={{
-                                    border: 'none',
-                                    background: 'transparent',
+                                    border: '1px solid #dee2e6',
+                                    background: '#fff',
                                     color: !next_page_url ? '#ccc' : '#6c757d',
-                                    fontSize: '15px',
+                                    fontSize: '11px',
                                     lineHeight: '1',
                                     outline: 'none',
                                     boxShadow: 'none',
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                    padding: '2px 6px',
-                                    height: '20px',
-                                    cursor: !next_page_url ? 'not-allowed' : 'pointer'
+                                    padding: '3px 6px',
+                                    height: '24px',
+                                    minWidth: '24px',
+                                    borderRadius: '3px',
+                                    cursor: !next_page_url ? 'not-allowed' : 'pointer',
+                                    transition: 'all 0.2s'
+                                }}
+                                onMouseEnter={(e) => {
+                                    if (next_page_url) {
+                                        e.target.style.borderColor = '#007bff';
+                                        e.target.style.color = '#007bff';
+                                    }
+                                }}
+                                onMouseLeave={(e) => {
+                                    if (next_page_url) {
+                                        e.target.style.borderColor = '#dee2e6';
+                                        e.target.style.color = '#6c757d';
+                                    }
                                 }}
                             >
-                                &rsaquo;
+                                &gt;
                             </a>
                         </li>
 
-                        {/* Last page button (>>) */}
-                        <li className={`page-item ${!next_page_url ? 'disabled' : ''}`}>
-                            <a
-                                href="#0"
-                                className="page-link"
-                                onClick={(e) => onClickPage(e, total_pages)}
-                                aria-label="Last"
-                                style={{
-                                    border: 'none',
-                                    background: 'transparent',
-                                    color: !next_page_url ? '#ccc' : '#6c757d',
-                                    fontSize: '15px',
-                                    lineHeight: '1',
-                                    outline: 'none',
-                                    boxShadow: 'none',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    padding: '2px 6px',
-                                    height: '20px',
-                                    cursor: !next_page_url ? 'not-allowed' : 'pointer'
-                                }}
-                            >
-                                &raquo;
-                            </a>
+                        {/* Go to page input */}
+                        <li className="page-item" style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '3px' }}>
+                            <span style={{
+                                fontSize: '11px',
+                                color: '#6c757d',
+                                whiteSpace: 'nowrap'
+                            }}>
+                                Go to
+                            </span>
+                            <form onSubmit={handleGoToPage} style={{ margin: 0 }}>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    max={total_pages}
+                                    value={goToPage}
+                                    onChange={(e) => setGoToPage(e.target.value)}
+                                    placeholder=""
+                                    style={{
+                                        width: '38px',
+                                        height: '24px',
+                                        border: '1px solid #dee2e6',
+                                        borderRadius: '3px',
+                                        padding: '3px 4px',
+                                        fontSize: '11px',
+                                        textAlign: 'center',
+                                        outline: 'none',
+                                        transition: 'all 0.2s'
+                                    }}
+                                    onFocus={(e) => {
+                                        e.target.style.borderColor = '#007bff';
+                                        e.target.style.boxShadow = '0 0 0 0.15rem rgba(0,123,255,.2)';
+                                    }}
+                                    onBlur={(e) => {
+                                        e.target.style.borderColor = '#dee2e6';
+                                        e.target.style.boxShadow = 'none';
+                                    }}
+                                />
+                            </form>
                         </li>
                     </ul>
                 </nav>

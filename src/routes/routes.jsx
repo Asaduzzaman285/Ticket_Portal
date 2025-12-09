@@ -11,6 +11,7 @@ import DetailsReportListPage from '../components/DetailsReportListPage';
 import SalesSummaryReportPage from '../components/SalesSummaryReportPage';
 // import MerchantWiseAllotmentPage from '../components/MerchantWiseAllotmentPage';
 import TicketPage from '../components/TicketPage';
+import PurchaseLogPage from '../components/PurchaseLogPage';
 
 const routes = [
    
@@ -25,6 +26,9 @@ const routes = [
     { path: '/admin/portal-role', exact: true, name: 'PortalRolePage', component: (props) => <PortalRolePage{...props} /> },
     { path: '/admin/detailed-report', exact: true, name: 'DetailsReportListPage', component: (props) => <DetailsReportListPage{...props} /> },
     { path: '/admin/summary-report', exact: true, name: 'SalesSummaryReportPage', component: (props) => <SalesSummaryReportPage{...props} /> },
+    { path: '/admin/purchase-log', exact: true, name: 'PurchaseLogPage', component: (props) => <PurchaseLogPage{...props} /> },
+
+   
 
     // { path: '/admin/merchant-allotment', exact: true, name: 'MerchantWiseAllotmentPage', component: (props) => <MerchantWiseAllotmentPage{...props} /> },
      { path: '/admin/ticket', exact: true, name: 'TicketPage', component: (props) => <TicketPage{...props} /> },

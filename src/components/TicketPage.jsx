@@ -22,6 +22,7 @@ const TicketPage = ({ sidebarVisible = false }) => {
     const [generating, setGenerating] = useState(false);
     const [searchTicketNo, setSearchTicketNo] = useState('');
     const [updating, setUpdating] = useState(false);
+    const [searchCustomerMobile, setSearchCustomerMobile] = useState('');
     const [actionMenuId, setActionMenuId] = useState(null);
     const [filterOptions, setFilterOptions] = useState({
         merchant_list: []
@@ -137,7 +138,6 @@ const TicketPage = ({ sidebarVisible = false }) => {
     }, []);
 
 
-
     // Handle click outside for action menu
     useEffect(() => {
         const handleClickOutside = () => setActionMenuId(null);
@@ -200,6 +200,7 @@ const fetchTickets = async (page = currentPage, filters = null) => {
         const status = filters !== null ? filters.status : searchStatus;
         const dateFrom = filters !== null ? filters.dateFrom : searchDateFrom;
         const dateTo = filters !== null ? filters.dateTo : searchDateTo;
+        const customerMobile = filters !== null ? filters.customerMobile : searchCustomerMobile;
         
         if (merchant) queryParams.append('merchant_id', merchant);
         if (ticketType) queryParams.append('ticket_type', ticketType);
@@ -207,6 +208,7 @@ const fetchTickets = async (page = currentPage, filters = null) => {
         if (status) queryParams.append('status', status);
         if (dateFrom) queryParams.append('start_time', `${dateFrom} 00:00:00`);
         if (dateTo) queryParams.append('end_time', `${dateTo} 23:59:59`);
+        if (customerMobile) queryParams.append('customer_mobile', customerMobile);
 
         const queryString = queryParams.toString();
         const url = `${BASE_URL}/list-paginate?${queryString}`;
@@ -252,6 +254,7 @@ const handleClear = () => {
     setSearchDateFrom('');
     setSearchDateTo('');
     setSearchTicketNo('');
+    setSearchCustomerMobile('');
     setCurrentPage(1);
     
     // Pass empty filters directly
@@ -261,7 +264,8 @@ const handleClear = () => {
         ticketNo: '',
         status: '',
         dateFrom: '',
-        dateTo: ''
+        dateTo: '',
+        customerMobile: ''
     });
 };
 
@@ -274,7 +278,8 @@ const handleFilter = () => {
         ticketNo: searchTicketNo,
         status: searchStatus,
         dateFrom: searchDateFrom,
-        dateTo: searchDateTo
+        dateTo: searchDateTo,
+        customerMobile: searchCustomerMobile
     });
 };
 
@@ -540,7 +545,7 @@ const handleFilter = () => {
                                         border: '1px solid #ccc',
                                         borderRadius: '4px',
                                         fontSize: '13px',
-                                        width: '200px',
+                                        width: '150px',
                                         backgroundColor: '#fff',
                                         cursor: 'pointer',
                                         minHeight: '34px',
@@ -596,7 +601,7 @@ const handleFilter = () => {
                                         border: '1px solid #ccc',
                                         borderRadius: '4px',
                                         fontSize: '13px',
-                                        width: '150px',
+                                        width: '120px',
                                         backgroundColor: '#fff',
                                         cursor: 'pointer',
                                         minHeight: '34px',
@@ -644,7 +649,7 @@ const handleFilter = () => {
         border: '1px solid #ccc',
         borderRadius: '4px',
         fontSize: '13px',
-        width: '150px',
+        width: '120px',
         backgroundColor: '#fff',
         position: "relative",     // <-- IMPORTANT
         zIndex: 1000,             // <-- SOLVES PASTE ISSUE
@@ -653,6 +658,28 @@ const handleFilter = () => {
 
 </div>
 
+                        {/* Customer Mobile Input */}
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <label style={{ marginBottom: '4px', fontSize: '13px', fontWeight: '500', color: '#333' }}>
+                                Customer Mobile
+                            </label>
+                            <input
+                                type="text"
+                                value={searchCustomerMobile}
+                                onChange={(e) => setSearchCustomerMobile(e.target.value)}
+                                placeholder="Enter mobile"
+                                style={{
+                                    padding: '8px 12px',
+                                    border: '1px solid #ccc',
+                                    borderRadius: '4px',
+                                    fontSize: '13px',
+                                    width: '130px',
+                                    backgroundColor: '#fff',
+                                    position: "relative",
+                                    zIndex: 1000,
+                                }}
+                            />
+                        </div>
 
                         {/* Status Dropdown */}
                         <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -671,7 +698,7 @@ const handleFilter = () => {
                                         border: '1px solid #ccc',
                                         borderRadius: '4px',
                                         fontSize: '13px',
-                                        width: '150px',
+                                        width: '110px',
                                         backgroundColor: '#fff',
                                         cursor: 'pointer',
                                         minHeight: '34px',
@@ -721,7 +748,7 @@ const handleFilter = () => {
                                     border: '1px solid #ccc',
                                     borderRadius: '4px',
                                     fontSize: '13px',
-                                    width: '150px',
+                                    width: '120px',
                                     backgroundColor: '#fff',
                                     cursor: 'pointer',
                                 }}
@@ -755,7 +782,7 @@ const handleFilter = () => {
                                     border: '1px solid #ccc',
                                     borderRadius: '4px',
                                     fontSize: '13px',
-                                    width: '150px',
+                                    width: '120px',
                                     backgroundColor: '#fff',
                                     cursor: 'pointer',
                                 }}
@@ -859,7 +886,7 @@ const handleFilter = () => {
         Generate Tickets
     </button>
 )}
-
+ {hasPermission("ticket create") && (
                         <button
                             onClick={() => setShowUpdateModal(true)}
                             style={{
@@ -878,6 +905,7 @@ const handleFilter = () => {
                             <i className="fa-solid fa-edit" style={{ marginRight: '6px', fontSize: '12px' }}></i>
                             Batch Update
                         </button>
+                        )}
                     </div>
                 </div>
 
@@ -991,7 +1019,7 @@ const handleFilter = () => {
                 ) : (
                     <tr>
                         <td colSpan="11" className="text-center text-muted py-3">
-                            {searchMerchant || searchTicketType || searchStatus || searchDateFrom || searchDateTo
+                            {searchMerchant || searchTicketType || searchStatus || searchDateFrom || searchDateTo || searchTicketNo || searchCustomerMobile
                                 ? "No tickets found matching your filters"
                                 : "No tickets available"}
                         </td>

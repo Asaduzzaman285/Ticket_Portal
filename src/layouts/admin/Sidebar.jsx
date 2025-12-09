@@ -27,6 +27,11 @@ const Sidebar = () => {
     // Check for specific permissions
     const hasUserList = permissions.includes('user list');
     const hasRoleList = permissions.includes('role list');
+    const hasTicketList = permissions.includes('ticket list');
+    const hasDetailsList = permissions.includes('details report');
+    const hasPurchaseList = permissions.includes('purchase log list'); 
+    const hasSummaryList = permissions.includes('summary report');
+
     const hasPermissionList = permissions.includes('permission list');
     
     // Show Access Control menu only if user has at least one of the required permissions
@@ -49,41 +54,76 @@ const Sidebar = () => {
                         </div>
                         Dashboard
                     </NavLink>
-
+                   { hasTicketList && (
                     <NavLink className="nav-link" to="/admin/ticket" activeClassName="active">
                         <div className="sb-nav-link-icon">
                             <Ticket size={20} />
                         </div>
                         TicketPage
                     </NavLink>
+                   )}
 
-                    {/* Report Menu */}
-                    <div
-                        className="nav-link d-flex justify-content-between align-items-center"
-                        data-bs-toggle="collapse"
-                        data-bs-target="#reportMenu"
-                        aria-expanded="false"
-                        aria-controls="reportMenu"
-                        style={{ cursor: 'pointer'}}
-                    >
-                        <div className="d-flex align-items-center">
-                            <div className="sb-nav-link-icon">
-                                <FileText size={18} />
-                            </div>
-                            Report
-                        </div>
-                        <i className="fas fa-chevron-down"></i>
-                    </div>
-                    <div className="collapse" id="reportMenu">
-                        <NavLink className="nav-link ms-4" to="/admin/detailed-report" style={{ fontSize: '13px' }}>
-                            <FileText size={16} className="me-2" />
-                            Sales Details Report
-                        </NavLink>
-                        <NavLink className="nav-link ms-4" to="/admin/summary-report" style={{ fontSize: '13px' }}>
-                            <BarChart3 size={16} className="me-2" />
-                            Sales Summary Report
-                        </NavLink>
-                    </div>
+           {/* Show Report menu only if ANY permission is present */}
+{(hasDetailsList || hasSummaryList || hasPurchaseList) && (
+  <>
+    {/* Report Menu */}
+    <div
+      className="nav-link d-flex justify-content-between align-items-center"
+      data-bs-toggle="collapse"
+      data-bs-target="#reportMenu"
+      aria-expanded="false"
+      aria-controls="reportMenu"
+      style={{ cursor: 'pointer' }}
+    >
+      <div className="d-flex align-items-center">
+        <div className="sb-nav-link-icon">
+          <FileText size={18} />
+        </div>
+        Report
+      </div>
+      <i className="fas fa-chevron-down"></i>
+    </div>
+
+    <div className="collapse" id="reportMenu">
+      
+      {/* Details Report */}
+      {hasDetailsList && (
+        <NavLink
+          className="nav-link ms-4"
+          to="/admin/detailed-report"
+          style={{ fontSize: '13px' }}
+        >
+          <FileText size={16} className="me-2" />
+          Sales Details Report
+        </NavLink>
+      )}
+
+      {/* Summary Report */}
+      {hasSummaryList && (
+        <NavLink
+          className="nav-link ms-4"
+          to="/admin/summary-report"
+          style={{ fontSize: '13px' }}
+        >
+          <BarChart3 size={16} className="me-2" />
+          Sales Summary Report
+        </NavLink>
+      )}
+      {hasPurchaseList && (
+        <NavLink
+          className="nav-link ms-4"
+          to="/admin/purchase-log"
+          style={{ fontSize: '13px' }}
+        >
+          <Banknote size={16} className="me-2" />
+          Purchase Log
+        </NavLink>
+      )}
+
+    </div>
+  </>
+)}
+
 
                     {/* Access Control Menu - Conditionally Rendered */}
                     {showAccessControl && (
