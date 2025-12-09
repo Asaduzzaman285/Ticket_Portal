@@ -93,6 +93,11 @@ const TicketPage = ({ sidebarVisible = false }) => {
         const [year, month, day] = date.split('-');
         return `${day}-${month}-${year} ${time}`;
     };
+    const formatBDT = (number) => {
+        const num = Math.round(Number(number)); // round to nearest integer
+        if (Number.isNaN(num)) return '0';
+        return num.toLocaleString('en-IN'); // format with commas
+      };
 
     // Get auth headers
     const getAuthHeaders = () => {
@@ -180,58 +185,67 @@ const TicketPage = ({ sidebarVisible = false }) => {
     };
 
     // Fetch tickets with server-side pagination and filtering
-    const fetchTickets = async (page = currentPage) => {
-        try {
-            setLoading(true);
+    // Modify fetchTickets to accept optional filters
+const fetchTickets = async (page = currentPage, filters = null) => {
+    try {
+        setLoading(true);
 
-            const queryParams = new URLSearchParams();
-            queryParams.append('page', page);
-            
-            if (searchMerchant) queryParams.append('merchant_id', searchMerchant);
-            if (searchTicketType) queryParams.append('ticket_type', searchTicketType);
-            if (searchTicketNo) queryParams.append('ticket_no', searchTicketNo);
-            if (searchStatus) queryParams.append('status', searchStatus);
-            if (searchDateFrom) queryParams.append('start_time', `${searchDateFrom} 00:00:00`);
-            if (searchDateTo) queryParams.append('end_time', `${searchDateTo} 23:59:59`);
+        const queryParams = new URLSearchParams();
+        queryParams.append('page', page);
+        
+        // Use passed filters or fall back to current state
+        const merchant = filters !== null ? filters.merchant : searchMerchant;
+        const ticketType = filters !== null ? filters.ticketType : searchTicketType;
+        const ticketNo = filters !== null ? filters.ticketNo : searchTicketNo;
+        const status = filters !== null ? filters.status : searchStatus;
+        const dateFrom = filters !== null ? filters.dateFrom : searchDateFrom;
+        const dateTo = filters !== null ? filters.dateTo : searchDateTo;
+        
+        if (merchant) queryParams.append('merchant_id', merchant);
+        if (ticketType) queryParams.append('ticket_type', ticketType);
+        if (ticketNo) queryParams.append('ticket_no', ticketNo);
+        if (status) queryParams.append('status', status);
+        if (dateFrom) queryParams.append('start_time', `${dateFrom} 00:00:00`);
+        if (dateTo) queryParams.append('end_time', `${dateTo} 23:59:59`);
 
-            const queryString = queryParams.toString();
-            const url = `${BASE_URL}/list-paginate?${queryString}`;
+        const queryString = queryParams.toString();
+        const url = `${BASE_URL}/list-paginate?${queryString}`;
 
-            const response = await fetch(url, {
-                method: 'GET',
-                headers: getAuthHeaders(),
-                credentials: 'include',
-            });
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: getAuthHeaders(),
+            credentials: 'include',
+        });
 
-            if (handleUnauthorized(response)) return;
+        if (handleUnauthorized(response)) return;
 
-            if (!response.ok) {
-                throw new Error(`Failed to fetch tickets: ${response.status} ${response.statusText}`);
-            }
-
-            const result = await response.json();
-
-            if (result.status === 'success') {
-                const ticketsData = result?.data?.data ?? [];
-                setTickets(ticketsData);
-                setCurrentPage(page);
-                
-                // Set paginator from API response
-                if (result.data?.paginator) {
-                    setPaginator(result.data.paginator);
-                }
-            } else {
-                throw new Error(result.message || 'Failed to fetch tickets');
-            }
-        } catch (error) {
-            console.error('Error fetching tickets:', error);
-            showAlert(error.message || "Failed to fetch tickets", "danger");
-        } finally {
-            setLoading(false);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch tickets: ${response.status} ${response.statusText}`);
         }
-    };
 
-   const handleClear = () => {
+        const result = await response.json();
+
+        if (result.status === 'success') {
+            const ticketsData = result?.data?.data ?? [];
+            setTickets(ticketsData);
+            setCurrentPage(page);
+            
+            if (result.data?.paginator) {
+                setPaginator(result.data.paginator);
+            }
+        } else {
+            throw new Error(result.message || 'Failed to fetch tickets');
+        }
+    } catch (error) {
+        console.error('Error fetching tickets:', error);
+        showAlert(error.message || "Failed to fetch tickets", "danger");
+    } finally {
+        setLoading(false);
+    }
+};
+
+// Update handleClear to pass empty filters directly
+const handleClear = () => {
     setSearchMerchant('');
     setSearchTicketType('');
     setSearchStatus('');
@@ -239,18 +253,30 @@ const TicketPage = ({ sidebarVisible = false }) => {
     setSearchDateTo('');
     setSearchTicketNo('');
     setCurrentPage(1);
-
-    // Wait for state to apply
-    setTimeout(() => {
-        fetchTickets(1);
-    }, 0);
+    
+    // Pass empty filters directly
+    fetchTickets(1, {
+        merchant: '',
+        ticketType: '',
+        ticketNo: '',
+        status: '',
+        dateFrom: '',
+        dateTo: ''
+    });
 };
 
-
-    const handleFilter = () => {
-        setCurrentPage(1);
-        fetchTickets(1);
-    };
+// Update handleFilter to pass current filter values
+const handleFilter = () => {
+    setCurrentPage(1);
+    fetchTickets(1, {
+        merchant: searchMerchant,
+        ticketType: searchTicketType,
+        ticketNo: searchTicketNo,
+        status: searchStatus,
+        dateFrom: searchDateFrom,
+        dateTo: searchDateTo
+    });
+};
 
     const handleGenerateTickets = async () => {
         try {
@@ -976,18 +1002,18 @@ const TicketPage = ({ sidebarVisible = false }) => {
 
         {/* Pagination Info */}
         {!loading && (
-            <div style={{ marginTop: '5px', fontSize: '12px', color: '#666' }}>
-                Showing{" "}
-                {paginator.current_page_items_count > 0
-                    ? (paginator.current_page - 1) * paginator.record_per_page + 1
-                    : 0}{" "}
-                to{" "}
-                {Math.min(
-                    paginator.current_page * paginator.record_per_page,
-                    paginator.total_count
-                )}{" "}
-                of {paginator.total_count} results
-            </div>
+         <div style={{ marginTop: '5px', fontSize: '12px', color: '#666' }}>
+         Showing{" "}
+         {paginator.current_page_items_count > 0
+             ? formatBDT((paginator.current_page - 1) * paginator.record_per_page + 1)
+             : 0}{" "}
+         to{" "}
+         {formatBDT(Math.min(
+             paginator.current_page * paginator.record_per_page,
+             paginator.total_count
+         ))}{" "}
+         of {formatBDT(paginator.total_count)} results
+     </div>
         )}
 
         {/* Pagination Controls */}

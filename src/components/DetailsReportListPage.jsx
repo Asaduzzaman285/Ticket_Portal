@@ -160,95 +160,191 @@ const DetailsReportListPage = ({ sidebarVisible = false }) => {
     };
 
     // SERVER-SIDE PAGINATION + FILTERING (FIXED)
-    const fetchReports = async (page = 1) => {
-        try {
-            setLoading(true);
+    // const fetchReports = async (page = 1) => {
+    //     try {
+    //         setLoading(true);
 
-            const queryParams = new URLSearchParams();
-            queryParams.append('page', page);
+    //         const queryParams = new URLSearchParams();
+    //         queryParams.append('page', page);
 
-            if (appliedFilters.ticket_no) queryParams.append('ticket_no', appliedFilters.ticket_no);
-            if (appliedFilters.merchant_id) queryParams.append('merchant_id', appliedFilters.merchant_id);
-           if (appliedFilters.ticket_type) queryParams.append('ticket_type', appliedFilters.ticket_type);
-            if (appliedFilters.ticket_no) queryParams.append('ticket_no', appliedFilters.ticket_no);
-            if (appliedFilters.start_time) queryParams.append('start_time', appliedFilters.start_time);
-            if (appliedFilters.end_time) queryParams.append('end_time', appliedFilters.end_time);
+    //         if (appliedFilters.ticket_no) queryParams.append('ticket_no', appliedFilters.ticket_no);
+    //         if (appliedFilters.merchant_id) queryParams.append('merchant_id', appliedFilters.merchant_id);
+    //        if (appliedFilters.ticket_type) queryParams.append('ticket_type', appliedFilters.ticket_type);
+    //         if (appliedFilters.ticket_no) queryParams.append('ticket_no', appliedFilters.ticket_no);
+    //         if (appliedFilters.start_time) queryParams.append('start_time', appliedFilters.start_time);
+    //         if (appliedFilters.end_time) queryParams.append('end_time', appliedFilters.end_time);
 
-            const queryString = queryParams.toString();
-            const url = `${BASE_URL}/list-paginate?${queryString}`;
+    //         const queryString = queryParams.toString();
+    //         const url = `${BASE_URL}/list-paginate?${queryString}`;
 
-            const response = await fetch(url, {
-                method: 'GET',
-                headers: getAuthHeaders(),
-                credentials: 'include',
-            });
+    //         const response = await fetch(url, {
+    //             method: 'GET',
+    //             headers: getAuthHeaders(),
+    //             credentials: 'include',
+    //         });
 
-            if (handleUnauthorized(response)) return;
+    //         if (handleUnauthorized(response)) return;
 
-            if (!response.ok) {
-                throw new Error(`Failed to fetch reports: ${response.status} ${response.statusText}`);
-            }
+    //         if (!response.ok) {
+    //             throw new Error(`Failed to fetch reports: ${response.status} ${response.statusText}`);
+    //         }
 
-            const result = await response.json();
+    //         const result = await response.json();
 
-            if (result.status === 'success') {
-                const reportsData = result?.data?.data ?? [];
-                setReports(reportsData);
-                setCurrentPage(page);
+    //         if (result.status === 'success') {
+    //             const reportsData = result?.data?.data ?? [];
+    //             setReports(reportsData);
+    //             setCurrentPage(page);
 
-                // Use server-provided paginator
-                if (result.data?.paginator) {
-                    setPaginator(result.data.paginator);
-                } else {
-                    // Fallback if paginator missing
-                    setPaginator(prev => ({
-                        ...prev,
-                        current_page: page,
-                        total_count: reportsData.length,
-                        current_page_items_count: reportsData.length
-                    }));
-                }
-            } else {
-                throw new Error(result.message || 'Failed to fetch reports');
-            }
-        } catch (error) {
-            console.error('Error fetching reports:', error);
-            showAlert(error.message || "Failed to fetch reports", "danger");
-        } finally {
-            setLoading(false);
-        }
-    };
+    //             // Use server-provided paginator
+    //             if (result.data?.paginator) {
+    //                 setPaginator(result.data.paginator);
+    //             } else {
+    //                 // Fallback if paginator missing
+    //                 setPaginator(prev => ({
+    //                     ...prev,
+    //                     current_page: page,
+    //                     total_count: reportsData.length,
+    //                     current_page_items_count: reportsData.length
+    //                 }));
+    //             }
+    //         } else {
+    //             throw new Error(result.message || 'Failed to fetch reports');
+    //         }
+    //     } catch (error) {
+    //         console.error('Error fetching reports:', error);
+    //         showAlert(error.message || "Failed to fetch reports", "danger");
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
 
-    const handleClear = () => {
-        setSearchTicketNo('');
-        setSearchMerchant('');
-        setSearchTicketType('');
-        setSearchDateFrom('');
-        setSearchDateTo('');
-        setAppliedFilters({
-            ticket_no: '',
-            merchant_id: '',
-            ticket_type: '',
-            start_time: '',
-            end_time: ''
+    // const handleClear = () => {
+    //     setSearchTicketNo('');
+    //     setSearchMerchant('');
+    //     setSearchTicketType('');
+    //     setSearchDateFrom('');
+    //     setSearchDateTo('');
+    //     setAppliedFilters({
+    //         ticket_no: '',
+    //         merchant_id: '',
+    //         ticket_type: '',
+    //         start_time: '',
+    //         end_time: ''
+    //     });
+    //     setCurrentPage(1);
+    //     fetchReports(1);
+    // };
+
+    // const handleFilter = () => {
+    //     const filters = {
+    //         ticket_no: searchTicketNo,
+    //         merchant_id: searchMerchant,
+    //         ticket_type: searchTicketType,
+    //         start_time: searchDateFrom ? `${searchDateFrom} 00:00:00` : '',
+    //         end_time: searchDateTo ? `${searchDateTo} 23:59:59` : ''
+    //     };
+
+    //     setAppliedFilters(filters);
+    //     setCurrentPage(1);
+    //     fetchReports(1);
+    // };
+    // Modify fetchReports to accept filters as parameter
+const fetchReports = async (page = 1, filters = null) => {
+    try {
+        setLoading(true);
+
+        const queryParams = new URLSearchParams();
+        queryParams.append('page', page);
+
+        // Use passed filters or fall back to appliedFilters
+        const activeFilters = filters || appliedFilters;
+
+        if (activeFilters.ticket_no) queryParams.append('ticket_no', activeFilters.ticket_no);
+        if (activeFilters.merchant_id) queryParams.append('merchant_id', activeFilters.merchant_id);
+        if (activeFilters.ticket_type) queryParams.append('ticket_type', activeFilters.ticket_type);
+        // Remove duplicate ticket_no line
+        if (activeFilters.start_time) queryParams.append('start_time', activeFilters.start_time);
+        if (activeFilters.end_time) queryParams.append('end_time', activeFilters.end_time);
+
+        const queryString = queryParams.toString();
+        const url = `${BASE_URL}/list-paginate?${queryString}`;
+
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: getAuthHeaders(),
+            credentials: 'include',
         });
-        setCurrentPage(1);
-        fetchReports(1);
+
+        if (handleUnauthorized(response)) return;
+
+        if (!response.ok) {
+            throw new Error(`Failed to fetch reports: ${response.status} ${response.statusText}`);
+        }
+
+        const result = await response.json();
+
+        if (result.status === 'success') {
+            const reportsData = result?.data?.data ?? [];
+            setReports(reportsData);
+            setCurrentPage(page);
+
+            if (result.data?.paginator) {
+                setPaginator(result.data.paginator);
+            } else {
+                setPaginator(prev => ({
+                    ...prev,
+                    current_page: page,
+                    total_count: reportsData.length,
+                    current_page_items_count: reportsData.length
+                }));
+            }
+        } else {
+            throw new Error(result.message || 'Failed to fetch reports');
+        }
+    } catch (error) {
+        console.error('Error fetching reports:', error);
+        showAlert(error.message || "Failed to fetch reports", "danger");
+    } finally {
+        setLoading(false);
+    }
+};
+
+// Update handleClear
+const handleClear = () => {
+    setSearchTicketNo('');
+    setSearchMerchant('');
+    setSearchTicketType('');
+    setSearchDateFrom('');
+    setSearchDateTo('');
+    
+    const emptyFilters = {
+        ticket_no: '',
+        merchant_id: '',
+        ticket_type: '',
+        start_time: '',
+        end_time: ''
+    };
+    
+    setAppliedFilters(emptyFilters);
+    setCurrentPage(1);
+    fetchReports(1, emptyFilters); // Pass filters directly
+};
+
+// Update handleFilter
+const handleFilter = () => {
+    const filters = {
+        ticket_no: searchTicketNo,
+        merchant_id: searchMerchant,
+        ticket_type: searchTicketType,
+        start_time: searchDateFrom ? `${searchDateFrom} 00:00:00` : '',
+        end_time: searchDateTo ? `${searchDateTo} 23:59:59` : ''
     };
 
-    const handleFilter = () => {
-        const filters = {
-            ticket_no: searchTicketNo,
-            merchant_id: searchMerchant,
-            ticket_type: searchTicketType,
-            start_time: searchDateFrom ? `${searchDateFrom} 00:00:00` : '',
-            end_time: searchDateTo ? `${searchDateTo} 23:59:59` : ''
-        };
-
-        setAppliedFilters(filters);
-        setCurrentPage(1);
-        fetchReports(1);
-    };
+    setAppliedFilters(filters);
+    setCurrentPage(1);
+    fetchReports(1, filters); // Pass filters directly
+};
 
     const handlePageChange = (page) => {
         setCurrentPage(page);
