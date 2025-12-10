@@ -46,6 +46,26 @@ const PurchaseLogPage = ({ sidebarVisible = false }) => {
         pagination_last_page: 1
     });
 
+    const confirmAndSendSms = (report) => {
+        if (!report.ticket_numbers) return; // safety check
+      
+        Swal.fire({
+          title: 'Are you sure?',
+          text: "Do you want to send SMS for this report?",
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#3085d6',
+          cancelButtonColor: '#d33',
+          confirmButtonText: 'Yes, send it!',
+          cancelButtonText: 'Cancel',
+        }).then((result) => {
+          if (result.isConfirmed) {
+            handleSendSms(report);
+            Swal.fire('Sent!', 'The SMS has been sent.', 'success');
+          }
+        });
+      };
+
     const handleDateChange = (setter) => (e) => {
         setter(e.target.value);
     };
@@ -876,21 +896,22 @@ const PurchaseLogPage = ({ sidebarVisible = false }) => {
                                                     lineHeight: "1.1",
                                                 }}
                                             >
-                                            <button
-                                            onClick={() => handleSendSms(report)}
-                                            className="dropdown-item py-0 px-2 d-flex align-items-center text-success"
-                                            style={{
-                                                fontSize: "12px",
-                                                height: "24px",
-                                                opacity: !report.ticket_numbers ? 0.4 : 1,
-                                                pointerEvents: !report.ticket_numbers ? "none" : "auto",
-                                                cursor: !report.ticket_numbers ? "not-allowed" : "pointer",
-                                            }}
-                                            disabled={!report.ticket_numbers}
-                                        >
-                                            <i className="fa-solid fa-envelope me-2" style={{ fontSize: "12px" }}></i>
-                                            Send SMS
-                                        </button>
+                                        <button
+  onClick={() => confirmAndSendSms(report)}
+  className="dropdown-item py-0 px-2 d-flex align-items-center text-success"
+  style={{
+      fontSize: "12px",
+      height: "24px",
+      opacity: !report.ticket_numbers ? 0.4 : 1,
+      pointerEvents: !report.ticket_numbers ? "none" : "auto",
+      cursor: !report.ticket_numbers ? "not-allowed" : "pointer",
+  }}
+  disabled={!report.ticket_numbers}
+>
+  <i className="fa-solid fa-envelope me-2" style={{ fontSize: "12px" }}></i>
+  Send SMS
+</button>
+
 
                                             </div>
                                         )}

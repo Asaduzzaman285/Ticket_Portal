@@ -30,6 +30,7 @@ const Sidebar = () => {
     const hasTicketList = permissions.includes('ticket list');
     const hasDetailsList = permissions.includes('details report');
     const hasPurchaseList = permissions.includes('purchase log list'); 
+    const hasSmsLogList = permissions.includes('sms log list');
     const hasSummaryList = permissions.includes('summary report');
 
     const hasPermissionList = permissions.includes('permission list');
@@ -64,7 +65,7 @@ const Sidebar = () => {
                    )}
 
            {/* Show Report menu only if ANY permission is present */}
-{(hasDetailsList || hasSummaryList || hasPurchaseList) && (
+{(hasDetailsList || hasSummaryList || hasPurchaseList ||  hasSmsLogList) && (
   <>
     {/* Report Menu */}
     <div
@@ -117,6 +118,16 @@ const Sidebar = () => {
         >
           <Banknote size={16} className="me-2" />
           Purchase Log
+        </NavLink>
+      )}
+            {hasSmsLogList && (
+        <NavLink
+          className="nav-link ms-4"
+          to="/admin/sms-log"
+          style={{ fontSize: '13px' }}
+        >
+          <Banknote size={16} className="me-2" />
+          Sms Log
         </NavLink>
       )}
 
