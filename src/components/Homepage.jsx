@@ -22,6 +22,7 @@ const Homepage = ({ sidebarVisible = false }) => {
   const [districtWiseSales, setDistrictWiseSales] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [merchantId, setMerchantId] = useState(null);
   const [stats, setStats] = useState({
     totalTickets: 0,
     totalRevenue: 0,
@@ -36,19 +37,19 @@ const Homepage = ({ sidebarVisible = false }) => {
   // Get auth headers
   const getAuthHeaders = () => {
     let token = localStorage.getItem('authToken')
-                 || localStorage.getItem('access_token')
-                 || localStorage.getItem('token')
-                 || localStorage.getItem('auth_token');
-    
+      || localStorage.getItem('access_token')
+      || localStorage.getItem('token')
+      || localStorage.getItem('auth_token');
+
     const headers = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
     };
-    
+
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
-    
+
     return headers;
   };
 
@@ -79,24 +80,29 @@ const Homepage = ({ sidebarVisible = false }) => {
 
       if (dashboardResult.status === 'success' && dashboardResult.data) {
         const data = dashboardResult.data;
-        
+
+        // Set merchant_id from response
+        if (data.merchant_id !== null && data.merchant_id !== undefined) {
+          setMerchantId(data.merchant_id);
+        }
+
         if (data.merchant_wise_sale) {
           setMerchantSalesData(data.merchant_wise_sale);
           calculateStats(data.merchant_wise_sale);
         }
-        
+
         if (data.today_hourly_sales) {
           setHourlySalesData(data.today_hourly_sales);
         }
-        
+
         if (data.status_wise_sales) {
           setStatusWiseSales(data.status_wise_sales);
         }
-        
+
         if (data.ticket_qty_wise_sales) {
           setTicketQtyWiseSales(data.ticket_qty_wise_sales);
         }
-        
+
         if (data.district_wise_sales) {
           setDistrictWiseSales(data.district_wise_sales);
         }
@@ -257,11 +263,11 @@ const Homepage = ({ sidebarVisible = false }) => {
     const y = cy + radius * Math.sin(-midAngle * Math.PI / 180);
 
     return (
-      <text 
-        x={x} 
-        y={y} 
-        fill="white" 
-        textAnchor={x > cx ? 'start' : 'end'} 
+      <text
+        x={x}
+        y={y}
+        fill="white"
+        textAnchor={x > cx ? 'start' : 'end'}
         dominantBaseline="central"
         fontSize="12px"
         fontWeight="600"
@@ -302,7 +308,7 @@ const Homepage = ({ sidebarVisible = false }) => {
       {/* Statistics Cards */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+        gridTemplateColumns: merchantId !== null ? 'repeat(auto-fit, minmax(280px, 1fr))' : 'repeat(auto-fit, minmax(240px, 1fr))',
         gap: '12px',
         marginBottom: '16px'
       }}>
@@ -318,11 +324,13 @@ const Homepage = ({ sidebarVisible = false }) => {
           <div style={{ fontSize: '11px', color: '#666', marginTop: '4px' }}>From all ticket sales</div>
         </div>
 
-        <div style={{ backgroundColor: 'white', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', padding: '16px' }}>
-          <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>Active Merchants</div>
-          <div style={{ fontSize: '24px', fontWeight: '600', color: '#333' }}>{stats.totalMerchants}</div>
-          <div style={{ fontSize: '11px', color: '#666', marginTop: '4px' }}>Selling tickets</div>
-        </div>
+        {merchantId === null && (
+          <div style={{ backgroundColor: 'white', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', padding: '16px' }}>
+            <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>Active Merchants</div>
+            <div style={{ fontSize: '24px', fontWeight: '600', color: '#333' }}>{stats.totalMerchants}</div>
+            <div style={{ fontSize: '11px', color: '#666', marginTop: '4px' }}>Selling tickets</div>
+          </div>
+        )}
 
         <div style={{ backgroundColor: 'white', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', padding: '16px' }}>
           <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>Available Tickets</div>
@@ -354,14 +362,14 @@ const Homepage = ({ sidebarVisible = false }) => {
               <BarChart data={chartData} margin={{ top: 20, right: 20, left: 0, bottom: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
                 <XAxis dataKey="name" tick={{ fill: '#666', fontSize: 12 }} />
-                <YAxis 
+                <YAxis
                   tickFormatter={(value) => {
                     if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
                     if (value >= 1000) return `${(value / 1000).toFixed(0)}k`;
                     return value;
-                  }} 
-                  tick={{ fill: '#666', fontSize: 12 }} 
-                  domain={[0, yMax]} 
+                  }}
+                  tick={{ fill: '#666', fontSize: 12 }}
+                  domain={[0, yMax]}
                 />
                 <Tooltip formatter={(value) => formatCurrency(value)} cursor={{ fill: 'rgba(0,0,0,0.03)' }} />
                 <Legend verticalAlign="top" wrapperStyle={{ top: -10, left: 0 }} />
@@ -394,21 +402,21 @@ const Homepage = ({ sidebarVisible = false }) => {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={hourlyChartData} margin={{ top: 20, right: 20, left: 0, bottom: 60 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                <XAxis 
-                  dataKey="time" 
-                  tick={{ fill: '#666', fontSize: 10 }} 
+                <XAxis
+                  dataKey="time"
+                  tick={{ fill: '#666', fontSize: 10 }}
                   angle={-45}
                   textAnchor="end"
                   height={80}
                 />
-                <YAxis 
-                  tick={{ fill: '#666', fontSize: 12 }} 
+                <YAxis
+                  tick={{ fill: '#666', fontSize: 12 }}
                   domain={[0, hourlyYMax]}
                   allowDecimals={false}
                 />
-                <Tooltip 
+                <Tooltip
                   formatter={(value) => [`${value} tickets`, 'Tickets Sold']}
-                  cursor={{ fill: 'rgba(0,0,0,0.03)' }} 
+                  cursor={{ fill: 'rgba(0,0,0,0.03)' }}
                 />
                 <Bar dataKey="tickets" name="Tickets Sold" radius={[6, 6, 0, 0]} animationDuration={800}>
                   {hourlyChartData.map((entry, index) => (
@@ -429,7 +437,7 @@ const Homepage = ({ sidebarVisible = false }) => {
         marginBottom: '16px'
       }}>
         {/* Status Wise Sales Pie Chart */}
-        <div style={{
+        {/* <div style={{
           backgroundColor: 'white',
           borderRadius: '8px',
           boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
@@ -464,8 +472,8 @@ const Homepage = ({ sidebarVisible = false }) => {
                     ))}
                   </Pie>
                   <Tooltip content={<CustomTooltip />} />
-                  <Legend 
-                    verticalAlign="bottom" 
+                  <Legend
+                    verticalAlign="bottom"
                     height={36}
                     formatter={(value, entry) => `${value} (${entry.payload.value} tickets)`}
                   />
@@ -473,7 +481,7 @@ const Homepage = ({ sidebarVisible = false }) => {
               </ResponsiveContainer>
             )}
           </div>
-        </div>
+        </div> */}
 
         {/* District Wise Sales Pie Chart */}
         <div style={{
@@ -511,8 +519,8 @@ const Homepage = ({ sidebarVisible = false }) => {
                     ))}
                   </Pie>
                   <Tooltip content={<CustomTooltip />} />
-                  <Legend 
-                    verticalAlign="bottom" 
+                  <Legend
+                    verticalAlign="bottom"
                     height={36}
                     formatter={(value, entry) => `${value} (${entry.payload.value})`}
                     wrapperStyle={{ fontSize: '11px' }}
