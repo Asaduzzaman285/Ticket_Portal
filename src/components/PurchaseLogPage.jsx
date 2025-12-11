@@ -710,38 +710,7 @@ const PurchaseLogPage = ({ sidebarVisible = false }) => {
                 padding: '10px',
                 overflowX: 'auto'
             }}>
-                {/* Download Button Section */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                    <button
-                        onClick={handleDownloadAll}
-                        disabled={downloading}
-                        style={{
-                            padding: '8px 16px',
-                            borderRadius: '4px',
-                            background: 'linear-gradient(45deg, #28a745, #218838)',
-                            color: 'white',
-                            border: 'none',
-                            cursor: downloading ? 'not-allowed' : 'pointer',
-                            fontSize: '12px',
-                            boxShadow: '0 1px 2px rgba(0,0,0,0.15)',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            opacity: downloading ? 0.6 : 1
-                        }}
-                    >
-                        {downloading ? (
-                            <>
-                                <i className="fa-solid fa-spinner fa-spin" style={{ marginRight: '6px', fontSize: '12px' }}></i>
-                                Downloading...
-                            </>
-                        ) : (
-                            <>
-                                <i className="fa-solid fa-download" style={{ marginRight: '6px', fontSize: '12px' }}></i>
-                                Download All Reports
-                            </>
-                        )}
-                    </button>
-                </div>
+
 
                 {/* Table */}
                 <table
